@@ -14,7 +14,8 @@
       "Bash(node -e:*)",
       "Bash(echo \"exit=$?\")",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(yarn build *)"
+      "Bash(yarn build *)",
+      "PowerShell(yarn lint 2>&1)"
     ],
     "deny": [],
     "ask": []
