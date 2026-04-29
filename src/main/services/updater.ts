@@ -5,6 +5,11 @@ import type { UpdateState } from '../../shared/types';
 
 // electron-updater は dev 実行ではアップデート情報を取得しないので、本番ビルドのみで動作させる
 const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+// portable 実行時は electron-builder が PORTABLE_EXECUTABLE_FILE を自動設定する。
+// portable 版は自動更新を一切行わない (NSIS 版インストーラを意図せず展開してしまうため)
+const isPortable = !!process.env.PORTABLE_EXECUTABLE_FILE;
+// 自動更新を完全にスキップすべき実行コンテキストか
+const shouldSkipUpdater = isDev || isPortable;
 
 let currentState: UpdateState = { status: 'idle' };
 let initialized = false;
@@ -29,8 +34,8 @@ export function initializeUpdater() {
     if (initialized) return;
     initialized = true;
 
-    if (isDev) {
-        // 開発時は何もしない (state は idle のまま)
+    if (shouldSkipUpdater) {
+        // 開発時 / portable 実行時は何もしない (state は idle のまま)
         return;
     }
 
@@ -83,7 +88,7 @@ export function initializeUpdater() {
 }
 
 export async function checkForUpdates(): Promise<UpdateState> {
-    if (isDev) {
+    if (shouldSkipUpdater) {
         return currentState;
     }
     try {
@@ -96,7 +101,7 @@ export async function checkForUpdates(): Promise<UpdateState> {
 }
 
 export async function downloadUpdate(): Promise<UpdateState> {
-    if (isDev) return currentState;
+    if (shouldSkipUpdater) return currentState;
     // ユーザーが承諾したのでダウンロード完了後に自動でインストールする
     autoInstallOnDownloaded = true;
     try {
@@ -109,7 +114,7 @@ export async function downloadUpdate(): Promise<UpdateState> {
 }
 
 export function quitAndInstall(): void {
-    if (isDev) return;
+    if (shouldSkipUpdater) return;
     setImmediate(() => {
         app.removeAllListeners('window-all-closed');
         for (const win of BrowserWindow.getAllWindows()) {
@@ -127,7 +132,7 @@ export function quitAndInstall(): void {
 export function scheduleStartupCheck(window: BrowserWindow, delayMs = 3000): void {
     if (startupCheckScheduled) return;
     startupCheckScheduled = true;
-    if (isDev) return;
+    if (shouldSkipUpdater) return;
 
     const trigger = () => {
         setTimeout(() => {
