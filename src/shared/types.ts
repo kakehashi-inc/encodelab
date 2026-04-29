@@ -4,15 +4,25 @@ export type PlatformId = 'win32' | 'darwin' | 'linux';
 // アプリのテーマ設定
 export type AppTheme = 'light' | 'dark' | 'system';
 
-// アプリの言語設定
-export type AppLanguage = 'ja' | 'en';
+// アプリの言語設定 ('system' は OS の言語に追従)
+export type AppLanguage = 'ja' | 'en' | 'system';
+
+// 実際に解決された (UI に適用すべき) テーマ
+export type ResolvedTheme = 'light' | 'dark';
+
+// 実際に解決された (UI に適用すべき) 言語
+export type ResolvedLanguage = 'ja' | 'en';
 
 // アプリ情報
 export type AppInfo = {
     name: string;
     version: string;
-    language: AppLanguage;
+    // ユーザーが選択した値 (system 含む)
     theme: AppTheme;
+    language: AppLanguage;
+    // OS から導出した既定値 (theme/language が 'system' のときに使用)
+    osTheme: ResolvedTheme;
+    osLanguage: ResolvedLanguage;
     os: PlatformId;
 };
 

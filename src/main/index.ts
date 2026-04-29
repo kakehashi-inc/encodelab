@@ -3,6 +3,8 @@ import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron';
 import { setupConsoleBridge, setMainWindow } from './utils/console-bridge';
 import { registerIpcHandlers } from './ipc/index';
 import { initializeUpdater, scheduleStartupCheck } from './services/updater';
+import { loadSettings, saveSettings } from './services/settings';
+import type { AppLanguage, AppTheme, ResolvedLanguage, ResolvedTheme } from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -72,23 +74,33 @@ app.whenReady().then(async () => {
     ipcMain.handle('app:getInfo', async () => {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const pkg = require('../../package.json');
+        const settings = loadSettings();
+        const osTheme: ResolvedTheme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+        const osLanguage: ResolvedLanguage = app.getLocale().startsWith('ja') ? 'ja' : 'en';
+        const theme: AppTheme = settings.theme ?? 'system';
+        const language: AppLanguage = settings.language ?? 'system';
+        // 保存済みの theme が 'light' / 'dark' なら nativeTheme にも反映してネイティブ UI を揃える
+        nativeTheme.themeSource = theme;
         return {
             name: app.getName() || pkg.name || 'Default App',
             version: pkg.version || app.getVersion(),
-            language: (app.getLocale().startsWith('ja') ? 'ja' : 'en') as 'ja' | 'en',
-            theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+            theme,
+            language,
+            osTheme,
+            osLanguage,
             os: process.platform as 'win32' | 'darwin' | 'linux',
         };
     });
 
-    ipcMain.handle('app:setTheme', (_e, theme: 'light' | 'dark' | 'system') => {
+    ipcMain.handle('app:setTheme', (_e, theme: AppTheme) => {
         nativeTheme.themeSource = theme;
+        saveSettings({ theme });
         return { theme };
     });
 
-    ipcMain.handle('app:setLanguage', (_e, lang: 'ja' | 'en') => {
-        // 必要に応じて設定に保存
-        return { language: lang };
+    ipcMain.handle('app:setLanguage', (_e, language: AppLanguage) => {
+        saveSettings({ language });
+        return { language };
     });
 
     ipcMain.handle('window:minimize', () => {

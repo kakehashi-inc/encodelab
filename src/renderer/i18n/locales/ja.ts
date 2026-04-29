@@ -1,5 +1,15 @@
 export default {
     appTitle: 'EncodeLab',
+    titleBar: {
+        themeMenu: 'テーマ',
+        themeLight: 'ライト',
+        themeDark: 'ダーク',
+        themeSystem: 'システム設定に従う',
+        languageMenu: '言語',
+        languageJa: '日本語',
+        languageEn: 'English',
+        languageSystem: 'システム設定に従う',
+    },
     updater: {
         confirm: '新しいバージョン v{{version}} が利用可能です。アップデートしますか？',
         update: 'アップデート',

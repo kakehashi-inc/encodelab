@@ -79,23 +79,8 @@ export default function ConverterApp() {
         }
     };
 
-    const rootRef = React.useRef<HTMLDivElement | null>(null);
-    // 起動時のみ、左ペインのパネル自体にフォーカスを移す。
-    // Why: frame:false のカスタムタイトルバー構成だと初期フォーカスが最小化ボタンに乗ってしまうため。
-    //      内部のコントロールではなく外枠 (Paper) を受け皿にして、誤操作を起こさない。
-    React.useEffect(() => {
-        const root = rootRef.current;
-        if (!root) return;
-        const leftPane = root.querySelector<HTMLElement>('.MuiPaper-root');
-        if (!leftPane) return;
-        leftPane.tabIndex = -1;
-        leftPane.style.outline = 'none';
-        leftPane.focus({ preventScroll: true });
-    }, []);
-
     return (
         <Box
-            ref={rootRef}
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
