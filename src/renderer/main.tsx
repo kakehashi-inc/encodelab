@@ -1,11 +1,12 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { CssBaseline, Box, Typography } from '@mui/material';
+import { CssBaseline, Box } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 import TitleBar from './components/TitleBar';
 import UpdateNotifier from './components/UpdateNotifier';
+import ConverterApp from './components/converter/ConverterApp';
 import type { AppInfo } from '@shared/types';
 
 function App() {
@@ -33,15 +34,12 @@ function App() {
                 <Box
                     sx={{
                         flexGrow: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        minHeight: 0,
                         bgcolor: 'background.default',
+                        overflow: 'hidden',
                     }}
                 >
-                    <Typography variant='h2' sx={{ fontWeight: 300, color: 'text.primary' }}>
-                        Hello Electron
-                    </Typography>
+                    <ConverterApp />
                 </Box>
             </Box>
             <UpdateNotifier />

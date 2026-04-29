@@ -17,6 +17,10 @@ const IPC_CHANNELS = {
     UPDATER_QUIT_AND_INSTALL: 'updater:quitAndInstall',
     UPDATER_GET_STATE: 'updater:getState',
     UPDATER_STATE_CHANGED: 'updater:stateChanged',
+    FILE_OPEN: 'file:open',
+    FILE_SAVE: 'file:save',
+    MIME_DETECT: 'mime:detect',
+    HASH_COMPUTE: 'hash:compute',
 } as const;
 
 const api: IpcApi = {
@@ -60,6 +64,24 @@ const api: IpcApi = {
             return () => {
                 ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_STATE_CHANGED, handler);
             };
+        },
+    },
+    file: {
+        async open() {
+            return ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN);
+        },
+        async save(args) {
+            return ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE, args);
+        },
+    },
+    mime: {
+        async detect(bytes) {
+            return ipcRenderer.invoke(IPC_CHANNELS.MIME_DETECT, bytes);
+        },
+    },
+    hash: {
+        async compute(args) {
+            return ipcRenderer.invoke(IPC_CHANNELS.HASH_COMPUTE, args);
         },
     },
 };

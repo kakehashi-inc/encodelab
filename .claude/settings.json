@@ -12,7 +12,9 @@
       "Bash(yarn lint)",
       "Bash(yarn format:*)",
       "Bash(node -e:*)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(yarn build *)"
     ],
     "deny": [],
     "ask": []

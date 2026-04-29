@@ -29,4 +29,11 @@ export const IPC_CHANNELS = {
     UPDATER_QUIT_AND_INSTALL: 'updater:quitAndInstall',
     UPDATER_GET_STATE: 'updater:getState',
     UPDATER_STATE_CHANGED: 'updater:stateChanged',
+    // ファイル選択 / 保存
+    FILE_OPEN: 'file:open',
+    FILE_SAVE: 'file:save',
+    // MIME 自動判定 (file-type)
+    MIME_DETECT: 'mime:detect',
+    // ハッシュ計算 (Node.js crypto)
+    HASH_COMPUTE: 'hash:compute',
 } as const;

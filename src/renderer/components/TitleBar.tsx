@@ -1,4 +1,5 @@
 import { Box, Typography, IconButton } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { AppInfo } from '@shared/types';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export default function TitleBar({ info }: Props) {
+    const { t } = useTranslation();
     const isMac = info?.os === 'darwin';
 
     return (
@@ -27,7 +29,7 @@ export default function TitleBar({ info }: Props) {
         >
             <Box sx={{ flexGrow: 1, ml: isMac ? 10 : 0, display: 'flex', alignItems: 'baseline', gap: 1 }}>
                 <Typography variant='body1' sx={{ fontWeight: 500, fontSize: '0.95rem' }}>
-                    Default App
+                    {t('appTitle')}
                 </Typography>
                 {info?.version && (
                     <Typography variant='caption' sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>

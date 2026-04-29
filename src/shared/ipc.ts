@@ -1,4 +1,14 @@
-import type { AppInfo, AppLanguage, AppTheme, UpdateState } from './types';
+import type {
+    AppInfo,
+    AppLanguage,
+    AppTheme,
+    UpdateState,
+    FileOpenResult,
+    FileSaveResult,
+    MimeDetectResult,
+    HashAlgorithm,
+    HashEncoding,
+} from './types';
 
 // IPC APIの型定義
 export type IpcApi = {
@@ -23,6 +33,21 @@ export type IpcApi = {
         quitAndInstall(): Promise<void>;
         // アップデート状態の変化を購読 (戻り値は購読解除関数)
         onStateChanged(listener: (state: UpdateState) => void): () => void;
+    };
+    // ファイル入出力
+    file: {
+        // ファイル選択ダイアログを開き、選択ファイルのバイト列を返す
+        open(): Promise<FileOpenResult>;
+        // ファイル保存ダイアログを開き、指定バイト列を保存する
+        save(args: { suggestedName?: string; bytes: Uint8Array }): Promise<FileSaveResult>;
+    };
+    // MIME 自動判定 (file-type 利用)
+    mime: {
+        detect(bytes: Uint8Array): Promise<MimeDetectResult>;
+    };
+    // ハッシュ計算 (Node.js crypto)
+    hash: {
+        compute(args: { algorithm: HashAlgorithm; encoding: HashEncoding; bytes: Uint8Array }): Promise<string>;
     };
 };
 
