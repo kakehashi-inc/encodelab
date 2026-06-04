@@ -15,6 +15,12 @@ let currentState: UpdateState = { status: 'idle' };
 let initialized = false;
 // ユーザーが「アップデートする」を承諾した場合に true。downloaded 後に自動でインストールする
 let autoInstallOnDownloaded = false;
+// ユーザー操作でダウンロードを開始している間だけ true。
+// autoUpdater.on('error') はグローバルで、起動時/バックグラウンドのチェック失敗 (オフライン等) も
+// ユーザー操作によるダウンロード失敗も同じハンドラに来る。
+// このフラグが true のとき (= ユーザーがダウンロード中) のみ error 状態を UI へ配信し、
+// それ以外のチェック失敗は UI に出さず静かに idle へ戻すために使う。
+let downloadRequested = false;
 // 起動時の自動チェックは 1 度だけ
 let startupCheckScheduled = false;
 
@@ -69,6 +75,8 @@ export function initializeUpdater() {
     });
 
     autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+        // ダウンロード成功で完了。以降のエラーは「ダウンロード中の失敗」ではない
+        downloadRequested = false;
         broadcastState({ status: 'downloaded', version: info.version, progress: 100 });
         if (autoInstallOnDownloaded) {
             // 既にユーザーが「アップデートする」と承諾済み — 短い余白後にインストールを実行
@@ -79,11 +87,18 @@ export function initializeUpdater() {
     });
 
     autoUpdater.on('error', (err: Error) => {
-        // 要件: アップデートチェック/ダウンロードのエラーはコンソール出力のみ。UI 通知はしない
-        console.error('[updater] error:', err?.message ?? String(err));
-        // 進行中状態のまま停滞しないように idle に戻す
+        const message = err?.message ?? String(err);
+        console.error('[updater] error:', message);
         autoInstallOnDownloaded = false;
-        broadcastState({ status: 'idle' });
+        if (downloadRequested) {
+            // ユーザーが「アップデート」を押してダウンロード中に失敗したケースのみ UI へエラー表示する。
+            // (無反応に見えないよう、必ずフィードバックを返す)
+            downloadRequested = false;
+            broadcastState({ status: 'error', version: currentState.version, error: message });
+        } else {
+            // 起動時/バックグラウンドのチェック失敗 (オフライン等) は UI に出さず静かに idle へ戻す
+            broadcastState({ status: 'idle' });
+        }
     });
 }
 
@@ -104,11 +119,22 @@ export async function downloadUpdate(): Promise<UpdateState> {
     if (shouldSkipUpdater) return currentState;
     // ユーザーが承諾したのでダウンロード完了後に自動でインストールする
     autoInstallOnDownloaded = true;
+    // ここから先のエラーは「ユーザー操作によるダウンロード失敗」として UI へ表示する
+    downloadRequested = true;
+    // 進行中であることを即座にフィードバック (download-progress が来る前でも無反応に見えない)
+    broadcastState({ status: 'downloading', version: currentState.version, progress: 0 });
     try {
         await autoUpdater.downloadUpdate();
     } catch (err) {
-        console.error('[updater] downloadUpdate failed:', err instanceof Error ? err.message : err);
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('[updater] downloadUpdate failed:', message);
         autoInstallOnDownloaded = false;
+        // autoUpdater.on('error') が発火しない経路 (Promise reject のみ) でも必ずエラーを配信する。
+        // error ハンドラ側で既に配信済みなら downloadRequested は false になっているため二重配信しない
+        if (downloadRequested) {
+            downloadRequested = false;
+            broadcastState({ status: 'error', version: currentState.version, error: message });
+        }
     }
     return currentState;
 }

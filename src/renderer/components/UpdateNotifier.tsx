@@ -5,10 +5,11 @@ import type { UpdateState } from '@shared/types';
 
 /**
  * 自動アップデート通知 UI。
- * - idle / checking / not-available / error: 何も表示しない
+ * - idle / checking / not-available: 何も表示しない
  * - available: 「アップデートしますか？」を確認 (アップデート / 後で)
  * - downloading: 進捗を表示
  * - downloaded: 適用中メッセージを表示 (メイン側が短い遅延で再起動)
+ * - error: ユーザー操作によるダウンロード失敗時のみ表示 (再試行 / 閉じる)
  */
 export default function UpdateNotifier() {
     const { t } = useTranslation();
@@ -38,7 +39,8 @@ export default function UpdateNotifier() {
     const shouldShow =
         (state.status === 'available' && !dismissed) ||
         state.status === 'downloading' ||
-        state.status === 'downloaded';
+        state.status === 'downloaded' ||
+        (state.status === 'error' && !dismissed);
 
     if (!shouldShow) return null;
 
@@ -86,6 +88,38 @@ export default function UpdateNotifier() {
                         <Stack spacing={1} sx={{ minWidth: 280 }}>
                             <Typography variant='body2'>{t('updater.installing')}</Typography>
                             <LinearProgress />
+                        </Stack>
+                    </Alert>
+                );
+            case 'error':
+                return (
+                    <Alert
+                        severity='error'
+                        action={
+                            <Stack direction='row' spacing={1}>
+                                <Button color='inherit' size='small' onClick={() => setDismissed(true)}>
+                                    {t('updater.close')}
+                                </Button>
+                                <Button
+                                    color='inherit'
+                                    size='small'
+                                    variant='outlined'
+                                    onClick={() => {
+                                        void window.encodelab.updater.download();
+                                    }}
+                                >
+                                    {t('updater.retry')}
+                                </Button>
+                            </Stack>
+                        }
+                    >
+                        <Stack spacing={0.5} sx={{ minWidth: 280 }}>
+                            <Typography variant='body2'>{t('updater.error')}</Typography>
+                            {state.error ? (
+                                <Typography variant='caption' sx={{ opacity: 0.8, wordBreak: 'break-word' }}>
+                                    {state.error}
+                                </Typography>
+                            ) : null}
                         </Stack>
                     </Alert>
                 );
