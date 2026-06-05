@@ -2,7 +2,7 @@ import path from 'path';
 import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron';
 import { setupConsoleBridge, setMainWindow } from './utils/console-bridge';
 import { registerIpcHandlers } from './ipc/index';
-import { initializeUpdater, scheduleStartupCheck } from './services/updater';
+import { initializeUpdater, scheduleStartupCheck, isInstalling } from './services/updater';
 import { loadSettings, saveSettings } from './services/settings';
 import type { AppLanguage, AppTheme, Favorite, ResolvedLanguage, ResolvedTheme } from '../shared/types';
 
@@ -139,6 +139,9 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+    // インストール中はアプリの終了・再起動を更新器 (Squirrel.Mac) に委ねるため、ここで app.quit() しない。
+    // 自前で quit すると更新器の終了・再起動処理と競合し、更新が適用されない恐れがある。
+    if (isInstalling()) return;
     app.quit();
 });
 

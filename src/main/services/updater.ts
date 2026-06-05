@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 import { autoUpdater, type UpdateInfo, type ProgressInfo } from 'electron-updater';
 import { IPC_CHANNELS } from '../../shared/constants';
 import type { UpdateState } from '../../shared/types';
@@ -23,6 +23,13 @@ let autoInstallOnDownloaded = false;
 let downloadRequested = false;
 // 起動時の自動チェックは 1 度だけ
 let startupCheckScheduled = false;
+// quitAndInstall() を呼んでインストール (アプリの終了・再起動) を更新器に委ねている間だけ true。
+// この間は window-all-closed での app.quit() を抑止し、更新器の終了・再起動と競合させない。
+let installing = false;
+
+export function isInstalling(): boolean {
+    return installing;
+}
 
 function broadcastState(next: UpdateState) {
     currentState = next;
@@ -47,8 +54,11 @@ export function initializeUpdater() {
 
     // ダウンロードはユーザーが明示的に承認したタイミングで開始する
     autoUpdater.autoDownload = false;
-    // インストールは quitAndInstall() を明示的に呼んだタイミングのみ
-    autoUpdater.autoInstallOnAppQuit = false;
+    // macOS の既知の不具合対策: true にしてダウンロード完了直後にネイティブ更新器 (Squirrel.Mac) へ
+    // ステージングさせる。false だと MacUpdater.quitAndInstall() が squirrelDownloadedUpdate=false の
+    // 非同期分岐 (再度 checkForUpdates してから update-downloaded を待つ) を通り、アプリの終了処理と
+    // 競合してプロセスが先に終了し「ダウンロードは成功するのに更新されない」状態に陥る。
+    autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.logger = console;
 
     autoUpdater.on('checking-for-update', () => {
@@ -141,12 +151,13 @@ export async function downloadUpdate(): Promise<UpdateState> {
 
 export function quitAndInstall(): void {
     if (shouldSkipUpdater) return;
+    // インストール中フラグを立て、window-all-closed での app.quit() を抑止する。
+    installing = true;
     setImmediate(() => {
-        app.removeAllListeners('window-all-closed');
-        for (const win of BrowserWindow.getAllWindows()) {
-            if (!win.isDestroyed()) win.close();
-        }
-        // isSilent=false, isForceRunAfter=true: インストール後にアプリを起動する
+        // ウィンドウは自前で閉じない。終了・再起動はすべて更新器 (Squirrel.Mac) に委ねる。
+        // 自前で閉じると window-all-closed / before-quit のハンドラが更新器より先に app.quit() を
+        // 走らせて競合し、更新が適用されない恐れがある。
+        // isSilent=false, isForceRunAfter=true: インストール後にアプリを再起動する
         autoUpdater.quitAndInstall(false, true);
     });
 }
