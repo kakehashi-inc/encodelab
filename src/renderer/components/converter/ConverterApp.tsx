@@ -115,7 +115,8 @@ export default function ConverterApp() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'flex-start',
-                        gap: 1.5,
+                        // 入れ替えボタン (上) と変換ボタン (下) を視覚的に分離する
+                        gap: 4,
                         // ペイン上部の "入力 / 出力" overline + cat/type 行の中心に揃える
                         pt: 5.5,
                     }}
