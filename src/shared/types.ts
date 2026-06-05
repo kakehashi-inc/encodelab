@@ -1,5 +1,18 @@
+import type { CategoryId, TypeId } from './conversion/catalog';
+
 // プラットフォーム識別子
 export type PlatformId = 'win32' | 'darwin' | 'linux';
+
+// 変換のお気に入り (変換元/変換先のカテゴリ・タイプの組合せ)。
+// データ自体は保存せず、入力/出力のカテゴリ・タイプのみを記録する。
+export type Favorite = {
+    // 安定した識別子。input/output のタイプから決定的に生成する (重複登録の判定に使う)。
+    id: string;
+    inputCategory: CategoryId;
+    inputType: TypeId;
+    outputCategory: CategoryId;
+    outputType: TypeId;
+};
 
 // アプリのテーマ設定
 export type AppTheme = 'light' | 'dark' | 'system';

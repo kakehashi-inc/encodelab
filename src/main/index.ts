@@ -4,7 +4,7 @@ import { setupConsoleBridge, setMainWindow } from './utils/console-bridge';
 import { registerIpcHandlers } from './ipc/index';
 import { initializeUpdater, scheduleStartupCheck } from './services/updater';
 import { loadSettings, saveSettings } from './services/settings';
-import type { AppLanguage, AppTheme, ResolvedLanguage, ResolvedTheme } from '../shared/types';
+import type { AppLanguage, AppTheme, Favorite, ResolvedLanguage, ResolvedTheme } from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -101,6 +101,22 @@ app.whenReady().then(async () => {
     ipcMain.handle('app:setLanguage', (_e, language: AppLanguage) => {
         saveSettings({ language });
         return { language };
+    });
+
+    ipcMain.handle('favorites:get', () => {
+        return loadSettings().favorites ?? [];
+    });
+
+    ipcMain.handle('favorites:save', (_e, favorites: Favorite[]) => {
+        saveSettings({ favorites });
+    });
+
+    ipcMain.handle('recent:get', () => {
+        return loadSettings().recentConversions ?? [];
+    });
+
+    ipcMain.handle('recent:save', (_e, recentConversions: Favorite[]) => {
+        saveSettings({ recentConversions });
     });
 
     ipcMain.handle('window:minimize', () => {

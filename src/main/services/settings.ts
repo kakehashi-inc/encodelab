@@ -3,12 +3,41 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import type { AppLanguage, AppTheme } from '../../shared/types';
+import type { AppLanguage, AppTheme, Favorite } from '../../shared/types';
 
 export type PersistedSettings = {
     theme?: AppTheme;
     language?: AppLanguage;
+    favorites?: Favorite[];
+    recentConversions?: Favorite[];
 };
+
+// 永続化された favorites を型安全に検証する。壊れた要素は捨てる。
+function sanitizeFavorites(value: unknown): Favorite[] {
+    if (!Array.isArray(value)) return [];
+    const result: Favorite[] = [];
+    for (const item of value) {
+        if (
+            item &&
+            typeof item === 'object' &&
+            typeof (item as Favorite).id === 'string' &&
+            typeof (item as Favorite).inputCategory === 'string' &&
+            typeof (item as Favorite).inputType === 'string' &&
+            typeof (item as Favorite).outputCategory === 'string' &&
+            typeof (item as Favorite).outputType === 'string'
+        ) {
+            const f = item as Favorite;
+            result.push({
+                id: f.id,
+                inputCategory: f.inputCategory,
+                inputType: f.inputType,
+                outputCategory: f.outputCategory,
+                outputType: f.outputType,
+            });
+        }
+    }
+    return result;
+}
 
 function getSettingsPath(): string {
     return path.join(app.getPath('userData'), 'settings.json');
@@ -27,6 +56,8 @@ export function loadSettings(): PersistedSettings {
         if (parsed.language === 'ja' || parsed.language === 'en' || parsed.language === 'system') {
             result.language = parsed.language;
         }
+        result.favorites = sanitizeFavorites(parsed.favorites);
+        result.recentConversions = sanitizeFavorites(parsed.recentConversions);
         return result;
     } catch {
         return {};

@@ -15,7 +15,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useConverterStore, inputSide, outputSide } from '../../store/converter-store';
+import { useConverterStore, inputSide, outputSide, favoriteId } from '../../store/converter-store';
 import { checkCompatibility } from '@shared/conversion/compatibility';
 import { runConversion } from '../../conversion/engine';
 import type { ConvertContext } from '../../conversion/handlers';
@@ -23,6 +23,7 @@ import Pane from './Pane';
 import CenterControls from './CenterControls';
 import BottomBar from './BottomBar';
 import ConvertingOverlay from './ConvertingOverlay';
+import FavoritesBar from './FavoritesBar';
 import { FILL_REMAINING_SX } from './shared';
 
 export default function ConverterApp() {
@@ -33,8 +34,11 @@ export default function ConverterApp() {
     const qrOptions = useConverterStore(s => s.qrOptions);
     const barcodeOptions = useConverterStore(s => s.barcodeOptions);
     const message = useConverterStore(s => s.message);
+    const favorites = useConverterStore(s => s.favorites);
     const setValue = useConverterStore(s => s.setValue);
     const swapPanes = useConverterStore(s => s.swapPanes);
+    const toggleFavorite = useConverterStore(s => s.toggleFavorite);
+    const recordRecentConversion = useConverterStore(s => s.recordRecentConversion);
     const setMessage = useConverterStore(s => s.setMessage);
     const clearMessage = useConverterStore(s => s.clearMessage);
 
@@ -42,6 +46,12 @@ export default function ConverterApp() {
     const outSide = outputSide(direction);
     const inputPane = inSide === 'left' ? left : right;
     const outputPane = outSide === 'left' ? left : right;
+
+    // 現在の入出力パターンがお気に入り登録済みか。
+    const isFavorited = React.useMemo(
+        () => favorites.some(f => f.id === favoriteId(inputPane.type, outputPane.type)),
+        [favorites, inputPane.type, outputPane.type]
+    );
 
     const compatibility = React.useMemo(
         () => checkCompatibility(inputPane.type, outputPane.type),
@@ -98,6 +108,7 @@ export default function ConverterApp() {
             const result = await runConversion(inputPane.type, inputPane.value, outputPane.type, ctx);
             if (result.ok) {
                 setValue(outSide, result.value);
+                recordRecentConversion();
                 setMessage({ severity: 'success', text: t('message.conversionSucceeded') });
             } else {
                 setMessage({ severity: 'error', text: resolveErrorText(result) });
@@ -121,6 +132,7 @@ export default function ConverterApp() {
                 position: 'relative',
             }}
         >
+            <FavoritesBar />
             <Box
                 sx={{
                     ...FILL_REMAINING_SX,
@@ -149,7 +161,9 @@ export default function ConverterApp() {
                         canConvert={compatibility.convertible}
                         busy={busy}
                         disabledReason={reasonText}
+                        isFavorited={isFavorited}
                         onSwap={swapPanes}
+                        onToggleFavorite={toggleFavorite}
                         onConvert={handleConvert}
                     />
                 </Box>

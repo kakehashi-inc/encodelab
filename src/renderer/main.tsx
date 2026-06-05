@@ -7,6 +7,7 @@ import './i18n/config';
 import TitleBar from './components/TitleBar';
 import UpdateNotifier from './components/UpdateNotifier';
 import ConverterApp from './components/converter/ConverterApp';
+import { useConverterStore } from './store/converter-store';
 import type { AppInfo, AppLanguage, AppTheme, ResolvedLanguage, ResolvedTheme } from '@shared/types';
 
 function resolveTheme(theme: AppTheme, osTheme: ResolvedTheme): ResolvedTheme {
@@ -27,6 +28,13 @@ function App() {
         window.encodelab.getAppInfo().then(appInfo => {
             setInfo(appInfo);
             i18n.changeLanguage(resolveLanguage(appInfo.language, appInfo.osLanguage));
+        });
+        // 永続化済みのお気に入り / 直近変換履歴を読み込んで store に反映する。
+        window.encodelab.getFavorites().then(favorites => {
+            useConverterStore.getState().setFavorites(favorites);
+        });
+        window.encodelab.getRecentConversions().then(recent => {
+            useConverterStore.getState().setRecentConversions(recent);
         });
     }, [i18n]);
 

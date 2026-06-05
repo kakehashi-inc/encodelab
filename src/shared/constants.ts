@@ -19,6 +19,12 @@ export const IPC_CHANNELS = {
     APP_GET_INFO: 'app:getInfo',
     APP_SET_THEME: 'app:setTheme',
     APP_SET_LANGUAGE: 'app:setLanguage',
+    // 変換のお気に入り
+    FAVORITES_GET: 'favorites:get',
+    FAVORITES_SAVE: 'favorites:save',
+    // 直近の変換履歴
+    RECENT_GET: 'recent:get',
+    RECENT_SAVE: 'recent:save',
     WINDOW_MINIMIZE: 'window:minimize',
     WINDOW_MAXIMIZE_OR_RESTORE: 'window:maximizeOrRestore',
     WINDOW_CLOSE: 'window:close',

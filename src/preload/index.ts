@@ -7,6 +7,10 @@ const IPC_CHANNELS = {
     APP_GET_INFO: 'app:getInfo',
     APP_SET_THEME: 'app:setTheme',
     APP_SET_LANGUAGE: 'app:setLanguage',
+    FAVORITES_GET: 'favorites:get',
+    FAVORITES_SAVE: 'favorites:save',
+    RECENT_GET: 'recent:get',
+    RECENT_SAVE: 'recent:save',
     WINDOW_MINIMIZE: 'window:minimize',
     WINDOW_MAXIMIZE_OR_RESTORE: 'window:maximizeOrRestore',
     WINDOW_CLOSE: 'window:close',
@@ -32,6 +36,18 @@ const api: IpcApi = {
     },
     async setLanguage(language) {
         return ipcRenderer.invoke(IPC_CHANNELS.APP_SET_LANGUAGE, language);
+    },
+    async getFavorites() {
+        return ipcRenderer.invoke(IPC_CHANNELS.FAVORITES_GET);
+    },
+    async saveFavorites(favorites) {
+        return ipcRenderer.invoke(IPC_CHANNELS.FAVORITES_SAVE, favorites);
+    },
+    async getRecentConversions() {
+        return ipcRenderer.invoke(IPC_CHANNELS.RECENT_GET);
+    },
+    async saveRecentConversions(recent) {
+        return ipcRenderer.invoke(IPC_CHANNELS.RECENT_SAVE, recent);
     },
     async minimize() {
         return ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE);

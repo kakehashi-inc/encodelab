@@ -10,6 +10,14 @@ export default {
         languageEn: 'English',
         languageSystem: 'システム設定に従う',
     },
+    favorites: {
+        menu: 'お気に入り',
+        add: 'この変換パターンをお気に入りに登録',
+        registered: 'お気に入り登録済み (クリックで解除)',
+        remove: '削除',
+        empty: 'お気に入りはまだありません',
+        recent: '直近の変換 (クリックで適用)',
+    },
     updater: {
         confirm: '新しいバージョン v{{version}} が利用可能です。アップデートしますか？',
         update: 'アップデート',

@@ -2,6 +2,7 @@ import type {
     AppInfo,
     AppLanguage,
     AppTheme,
+    Favorite,
     UpdateState,
     FileOpenResult,
     FileSaveResult,
@@ -16,6 +17,12 @@ export type IpcApi = {
     getAppInfo(): Promise<AppInfo>;
     setTheme(theme: AppTheme): Promise<{ theme: AppTheme }>;
     setLanguage(language: AppLanguage): Promise<{ language: AppLanguage }>;
+    // 変換のお気に入り
+    getFavorites(): Promise<Favorite[]>;
+    saveFavorites(favorites: Favorite[]): Promise<void>;
+    // 直近の変換履歴
+    getRecentConversions(): Promise<Favorite[]>;
+    saveRecentConversions(recent: Favorite[]): Promise<void>;
     // ウィンドウ制御
     minimize(): Promise<void>;
     maximizeOrRestore(): Promise<boolean>;

@@ -10,6 +10,14 @@ export default {
         languageEn: 'English',
         languageSystem: 'Match system',
     },
+    favorites: {
+        menu: 'Favorites',
+        add: 'Add this conversion pattern to favorites',
+        registered: 'Saved as favorite (click to remove)',
+        remove: 'Remove',
+        empty: 'No favorites yet',
+        recent: 'Recent conversions (click to apply)',
+    },
     updater: {
         confirm: 'A new version v{{version}} is available. Update now?',
         update: 'Update',
