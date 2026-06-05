@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Reworked the center controls: the right-arrow button is now the Convert button, and a new swap button (placed where the direction toggle used to be) exchanges the left and right panes. The bottom-right Convert button has been removed.
+- The bottom message bar is now hidden by default and only appears after a conversion. It is shown as a web-style alert whose color reflects the result (green for success, red for errors) and can be dismissed with a close (×) button.
+
 ### Added
 
 - Automatic updates now work on macOS.

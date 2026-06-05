@@ -28,7 +28,7 @@ export default {
         paste: 'Paste image',
         clear: 'Clear',
         convert: 'Convert',
-        flipDirection: 'Flip direction',
+        swapPanes: 'Swap panes',
         searchType: 'Search type',
         searchPlaceholder: 'Search type name…',
         searchNoResults: 'No matching type',
@@ -102,6 +102,9 @@ export default {
     reason: {
         hashOutputOnly: 'Hash types are output-only.',
         notConvertible: 'This combination is not convertible.',
+    },
+    message: {
+        conversionSucceeded: 'Conversion completed.',
     },
     error: {
         emptyInput: 'Input is empty.',

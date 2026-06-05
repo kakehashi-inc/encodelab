@@ -1,52 +1,27 @@
-// 下段バー: 変換不可理由 / 直近のエラーメッセージ + 変換ボタン。
-import { Box, Button, Paper, Typography } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { useTranslation } from 'react-i18next';
+// 下段メッセージバー: 変換結果 (成功 / エラー等) を Web のアラート風に表示する。
+// メッセージがあるときのみ親 (ConverterApp) が描画する。右端の × ボタンで閉じられる。
+//
+// severity ごとに配色が変わる (成功=緑 / エラー=赤 等)。standard variant は
+// 淡い背景 + 同系の濃い文字色を MUI が severity・ライト/ダークモードごとに
+// 自動算出するため、いずれの状態でも文字が見やすいコントラストになる。
+import { Alert } from '@mui/material';
+import type { MessageSeverity } from '../../store/converter-store';
 
 type Props = {
-    canConvert: boolean;
-    reason?: string;
-    busy: boolean;
-    onConvert: () => void;
+    severity: MessageSeverity;
+    message: string;
+    onClose: () => void;
 };
 
-export default function BottomBar({ canConvert, reason, busy, onConvert }: Props) {
-    const { t } = useTranslation();
+export default function BottomBar({ severity, message, onClose }: Props) {
     return (
-        <Paper
-            elevation={1}
-            sx={{
-                px: 2,
-                py: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-            }}
+        <Alert
+            severity={severity}
+            variant='standard'
+            onClose={onClose}
+            sx={{ alignItems: 'center', '& .MuiAlert-message': { wordBreak: 'break-word' } }}
         >
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                {reason ? (
-                    <Typography
-                        variant='body2'
-                        color={canConvert ? 'text.secondary' : 'warning.main'}
-                        sx={{ textAlign: 'center', wordBreak: 'break-word' }}
-                    >
-                        {reason}
-                    </Typography>
-                ) : (
-                    <Typography variant='body2' color='text.disabled' sx={{ textAlign: 'center' }}>
-                        &nbsp;
-                    </Typography>
-                )}
-            </Box>
-            <Button
-                variant='contained'
-                onClick={onConvert}
-                disabled={!canConvert || busy}
-                startIcon={<PlayArrowIcon />}
-                sx={{ minWidth: 140 }}
-            >
-                {t('common.convert')}
-            </Button>
-        </Paper>
+            {message}
+        </Alert>
     );
 }

@@ -28,7 +28,7 @@ export default {
         paste: '画像を貼付',
         clear: 'クリア',
         convert: '変換',
-        flipDirection: '方向反転',
+        swapPanes: '左右のペインを入れ替え',
         searchType: 'タイプ検索',
         searchPlaceholder: 'タイプ名で検索…',
         searchNoResults: '一致するタイプはありません',
@@ -102,6 +102,9 @@ export default {
     reason: {
         hashOutputOnly: 'ハッシュは出力専用です。',
         notConvertible: 'この組合せは変換できません。',
+    },
+    message: {
+        conversionSucceeded: '変換が完了しました。',
     },
     error: {
         emptyInput: '入力が空です。',

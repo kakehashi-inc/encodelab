@@ -17,21 +17,30 @@ export type PaneState = {
     value: PaneValue;
 };
 
+// 下段メッセージバーの種別。Web のアラートに準じ、severity で配色を変える。
+export type MessageSeverity = 'success' | 'info' | 'warning' | 'error';
+
+export type ConverterMessage = {
+    severity: MessageSeverity;
+    text: string;
+};
+
 type ConverterState = {
     direction: Direction;
     left: PaneState;
     right: PaneState;
     qrOptions: QrOptions;
-    // 直近の変換エラー (出力ペイン側に表示)
-    errorMessage?: string;
+    // 直近の変換結果メッセージ (下段バーに表示)。未設定ならバーは非表示。
+    message?: ConverterMessage;
 
     // ====== Actions ======
     setCategory(side: Side, category: CategoryId): void;
     setType(side: Side, type: TypeId): void;
     setValue(side: Side, value: PaneValue): void;
-    flipDirection(): void;
+    swapPanes(): void;
     setQrOptions(options: Partial<QrOptions>): void;
-    setError(message: string | undefined): void;
+    setMessage(message: ConverterMessage | undefined): void;
+    clearMessage(): void;
     clearBothPanes(): void;
 };
 
@@ -67,7 +76,7 @@ export const useConverterStore = create<ConverterState>(set => ({
                 // 反対側もデータをクリア (要件 §7)
                 left: side === 'left' ? next : { ...state.left, value: EMPTY_PANE_VALUE },
                 right: side === 'right' ? next : { ...state.right, value: EMPTY_PANE_VALUE },
-                errorMessage: undefined,
+                message: undefined,
             };
         });
     },
@@ -84,7 +93,7 @@ export const useConverterStore = create<ConverterState>(set => ({
                 ...state,
                 left: side === 'left' ? next : { ...state.left, value: EMPTY_PANE_VALUE },
                 right: side === 'right' ? next : { ...state.right, value: EMPTY_PANE_VALUE },
-                errorMessage: undefined,
+                message: undefined,
             };
         });
     },
@@ -96,12 +105,15 @@ export const useConverterStore = create<ConverterState>(set => ({
         }));
     },
 
-    flipDirection() {
-        // 方向反転時はデータをクリアしない (要件 §7)
+    swapPanes() {
+        // 左右ペインの内容 (カテゴリ / 型 / 値) を物理的に入れ替える。
+        // direction は 'rtl' (左=入力 / 右=出力) 固定運用なので、
+        // 入れ替えにより入力と出力の役割が反転する。
         set(state => ({
             ...state,
-            direction: state.direction === 'rtl' ? 'ltr' : 'rtl',
-            errorMessage: undefined,
+            left: state.right,
+            right: state.left,
+            message: undefined,
         }));
     },
 
@@ -109,8 +121,12 @@ export const useConverterStore = create<ConverterState>(set => ({
         set(state => ({ ...state, qrOptions: { ...state.qrOptions, ...options } }));
     },
 
-    setError(message) {
-        set(state => ({ ...state, errorMessage: message }));
+    setMessage(message) {
+        set(state => ({ ...state, message }));
+    },
+
+    clearMessage() {
+        set(state => ({ ...state, message: undefined }));
     },
 
     clearBothPanes() {
@@ -118,7 +134,7 @@ export const useConverterStore = create<ConverterState>(set => ({
             ...state,
             left: { ...state.left, value: EMPTY_PANE_VALUE },
             right: { ...state.right, value: EMPTY_PANE_VALUE },
-            errorMessage: undefined,
+            message: undefined,
         }));
     },
 }));

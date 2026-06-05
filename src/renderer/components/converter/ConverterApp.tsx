@@ -2,13 +2,15 @@
 //
 // レイアウト:
 //   ┌─────────────────────┬─────┬─────────────────────┐
-//   │  Pane (side='left') │  ⇄  │  Pane (side='right')│
+//   │  Pane (side='left') │ ⇄→  │  Pane (side='right')│
 //   │                     │     │                     │
 //   │  (header + content) │     │  (header + content) │
 //   ├─────────────────────┴─────┴─────────────────────┤
-//   │            メッセージ              [変換]        │
+//   │   メッセージバー (アラート風 / メッセージ時のみ) │
 //   └─────────────────────────────────────────────────┘
 //
+// 中央列は入れ替えボタン (⇄) と変換ボタン (→) を縦に並べる。
+// 下段バーは変換結果メッセージがあるときのみ表示し、× で閉じられる。
 // Pane は左右で同じコンポーネント。direction から自身の role (入力/出力) を導出する。
 import React from 'react';
 import { Box } from '@mui/material';
@@ -18,7 +20,7 @@ import { checkCompatibility } from '@shared/conversion/compatibility';
 import { runConversion } from '../../conversion/engine';
 import type { ConvertContext } from '../../conversion/handlers';
 import Pane from './Pane';
-import DirectionToggle from './DirectionToggle';
+import CenterControls from './CenterControls';
 import BottomBar from './BottomBar';
 
 export default function ConverterApp() {
@@ -27,10 +29,11 @@ export default function ConverterApp() {
     const left = useConverterStore(s => s.left);
     const right = useConverterStore(s => s.right);
     const qrOptions = useConverterStore(s => s.qrOptions);
-    const errorMessage = useConverterStore(s => s.errorMessage);
+    const message = useConverterStore(s => s.message);
     const setValue = useConverterStore(s => s.setValue);
-    const flipDirection = useConverterStore(s => s.flipDirection);
-    const setError = useConverterStore(s => s.setError);
+    const swapPanes = useConverterStore(s => s.swapPanes);
+    const setMessage = useConverterStore(s => s.setMessage);
+    const clearMessage = useConverterStore(s => s.clearMessage);
 
     const inSide = inputSide(direction);
     const outSide = outputSide(direction);
@@ -54,25 +57,30 @@ export default function ConverterApp() {
         [qrOptions]
     );
 
+    // 変換不可の理由 (変換ボタンのツールチップ向け)。変換可能なら undefined。
     const reasonText = React.useMemo(() => {
         if (compatibility.convertible) {
-            return errorMessage;
+            return undefined;
         }
         if (compatibility.reasonKey) {
             return t(compatibility.reasonKey, compatibility.reasonParams ?? {});
         }
         return t('reason.notConvertible');
-    }, [compatibility, errorMessage, t]);
+    }, [compatibility, t]);
 
     const handleConvert = async () => {
-        setError(undefined);
+        clearMessage();
         setBusy(true);
         try {
             const result = await runConversion(inputPane.type, inputPane.value, outputPane.type, ctx);
             if (result.ok) {
                 setValue(outSide, result.value);
+                setMessage({ severity: 'success', text: t('message.conversionSucceeded') });
             } else {
-                setError(t('error.conversionFailed', { message: result.error }));
+                setMessage({
+                    severity: 'error',
+                    text: t('error.conversionFailed', { message: result.error }),
+                });
             }
         } finally {
             setBusy(false);
@@ -104,22 +112,27 @@ export default function ConverterApp() {
                 <Box
                     sx={{
                         display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: 1.5,
                         // ペイン上部の "入力 / 出力" overline + cat/type 行の中心に揃える
                         pt: 5.5,
                     }}
                 >
-                    <DirectionToggle direction={direction} onFlip={flipDirection} />
+                    <CenterControls
+                        canConvert={compatibility.convertible}
+                        busy={busy}
+                        disabledReason={reasonText}
+                        onSwap={swapPanes}
+                        onConvert={handleConvert}
+                    />
                 </Box>
                 <Pane side='right' />
             </Box>
-            <BottomBar
-                canConvert={compatibility.convertible}
-                reason={reasonText}
-                busy={busy}
-                onConvert={handleConvert}
-            />
+            {message && (
+                <BottomBar severity={message.severity} message={message.text} onClose={clearMessage} />
+            )}
         </Box>
     );
 }
