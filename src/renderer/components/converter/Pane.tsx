@@ -19,10 +19,12 @@ export default function Pane({ side }: Props) {
     const direction = useConverterStore(s => s.direction);
     const pane = useConverterStore(s => s[side]);
     const qrOptions = useConverterStore(s => s.qrOptions);
+    const barcodeOptions = useConverterStore(s => s.barcodeOptions);
     const setCategory = useConverterStore(s => s.setCategory);
     const setType = useConverterStore(s => s.setType);
     const setValue = useConverterStore(s => s.setValue);
     const setQrOptions = useConverterStore(s => s.setQrOptions);
+    const setBarcodeOptions = useConverterStore(s => s.setBarcodeOptions);
 
     const role = inputSide(direction) === side ? 'input' : 'output';
 
@@ -51,8 +53,10 @@ export default function Pane({ side }: Props) {
                     type={pane.type}
                     value={pane.value}
                     qrOptions={qrOptions}
+                    barcodeOptions={barcodeOptions}
                     onValueChange={v => setValue(side, v)}
                     onQrOptionsChange={setQrOptions}
+                    onBarcodeOptionsChange={setBarcodeOptions}
                 />
             </Box>
         </Paper>

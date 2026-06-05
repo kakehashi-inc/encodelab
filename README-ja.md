@@ -19,7 +19,7 @@ EncodeLab は、Base64 や URL エンコードなどの文字列変換、JSON/YA
 | 整数 | 通常 (10 進) / Crockford Base32 |
 | バイナリ | Raw / data URL |
 | ハッシュ (出力専用) | MD5 / SHA-1 / SHA-256 / SHA-512 (Hex / Base64) |
-| 画像 | QR コード (生成 / 読取) |
+| QRコード・バーコード | QR コード, および 1 次元バーコード: JAN/EAN-13/8, UPC-A/E, CODE128, GS1-128, CODE39, ITF, NW-7 (生成 / 読取) |
 
 ## 2. 対応OS
 
@@ -141,6 +141,8 @@ src/
 - MIME 自動判定: [`file-type`](https://github.com/sindresorhus/file-type)
 - QR コード生成: [`qrcode`](https://github.com/soldair/node-qrcode)
 - QR コード読取: [`jsqr`](https://github.com/cozmo/jsQR)
+- バーコード生成: [`bwip-js`](https://github.com/metafloor/bwip-js)
+- バーコード読取: [`@zxing/library`](https://github.com/zxing-js/library)
 - ハッシュ: Node.js 標準 `crypto`
 - Base 系全般 / エスケープ系 / JSON↔YAML: 自前実装 (`src/renderer/conversion/`)
 

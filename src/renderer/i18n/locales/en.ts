@@ -58,6 +58,10 @@ export default {
         qrMargin: 'Margin (modules)',
         qrForeground: 'Foreground',
         qrBackground: 'Background',
+        barcodeSymbology: 'Symbology',
+        barcodeScale: 'Scale',
+        barcodeHeight: 'Bar height',
+        barcodeIncludeText: 'Show text',
     },
     category: {
         text: 'Text',
@@ -67,7 +71,7 @@ export default {
         integer: 'Integer',
         binary: 'Binary',
         hash: 'Hash (output only)',
-        image: 'Image',
+        barcode: 'QR Code / Barcode',
     },
     type: {
         plain: 'Plain',
@@ -99,6 +103,7 @@ export default {
         sha512Hex: 'SHA-512 (Hex)',
         sha512Base64: 'SHA-512 (Base64)',
         qrCode: 'QR Code',
+        barcode: 'Barcode',
     },
     reason: {
         hashOutputOnly: 'Hash types are output-only.',
@@ -110,5 +115,20 @@ export default {
     error: {
         emptyInput: 'Input is empty.',
         conversionFailed: 'Conversion failed: {{message}}',
+        // Barcode generation input-requirement errors (per symbology)
+        barcodeInput: {
+            generic: 'This input is not valid for the selected symbology. Enter a value that matches its specification.',
+            ean13: 'EAN-13 / JAN must be 12 digits (or 13 including the check digit).',
+            ean8: 'EAN-8 must be 7 digits (or 8 including the check digit).',
+            upca: 'UPC-A must be 11 digits (or 12 including the check digit).',
+            upce: 'UPC-E must contain only digits.',
+            'gs1-128':
+                'GS1-128 requires Application Identifiers (AIs) wrapped in parentheses, e.g. (01)04912345678904',
+            interleaved2of5: 'ITF (Interleaved 2 of 5) must contain an even number of digits.',
+            rationalizedCodabar:
+                'NW-7 (Codabar) must start and end with one of A-D, with digits and symbols (- $ : / . +) in between, e.g. A1234A',
+            code39: 'CODE39 allows only digits, capital letters, spaces, and the symbols - . $ / + %.',
+            code128: 'The input contains characters that CODE128 cannot encode.',
+        },
     },
 };

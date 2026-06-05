@@ -7,9 +7,14 @@
 import { findType, type TypeId } from '@shared/conversion/catalog';
 import { adapt } from './adapt';
 import { parsePane, serializePane, type ConvertContext, computeHashOf } from './handlers';
+import { BarcodeInputError } from './barcode/generator';
 import type { PaneValue } from './pane-value';
 
-export type ConvertResult = { ok: true; value: PaneValue } | { ok: false; error: string };
+// 失敗時は素のメッセージ (error) に加え、表示側で i18n 解決するための
+// キー (errorKey) とパラメータ (errorParams) を任意で持つ。
+export type ConvertResult =
+    | { ok: true; value: PaneValue }
+    | { ok: false; error: string; errorKey?: string; errorParams?: Record<string, string> };
 
 const textEncoder = new TextEncoder();
 
@@ -34,6 +39,15 @@ export async function runConversion(
         const value = await serializePane(outputType, adapted, ctx);
         return { ok: true, value };
     } catch (err) {
+        if (err instanceof BarcodeInputError) {
+            // 規格 ID に対応する i18n キーを渡す。未定義規格は generic にフォールバック。
+            return {
+                ok: false,
+                error: err.detail,
+                errorKey: `error.barcodeInput.${err.symbology}`,
+                errorParams: {},
+            };
+        }
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
 }

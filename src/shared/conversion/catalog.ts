@@ -1,5 +1,5 @@
 // カテゴリ ID
-export type CategoryId = 'text' | 'encoded' | 'escape' | 'structured' | 'integer' | 'binary' | 'hash' | 'image';
+export type CategoryId = 'text' | 'encoded' | 'escape' | 'structured' | 'integer' | 'binary' | 'hash' | 'barcode';
 
 // タイプ ID
 export type TypeId =
@@ -38,8 +38,9 @@ export type TypeId =
     | 'sha256Base64'
     | 'sha512Hex'
     | 'sha512Base64'
-    // image
-    | 'qrCode';
+    // barcode (QR コード・バーコード)
+    | 'qrCode'
+    | 'barcode';
 
 // データ表示領域の種別 (UI が切り替わる単位)
 export type DisplayKind = 'text' | 'binary' | 'image';
@@ -251,9 +252,12 @@ export const CATEGORIES: CategoryDefinition[] = [
         ],
     },
     {
-        id: 'image',
-        labelKey: 'category.image',
-        types: [{ id: 'qrCode', category: 'image', labelKey: 'type.qrCode', display: 'image', domain: 'text' }],
+        id: 'barcode',
+        labelKey: 'category.barcode',
+        types: [
+            { id: 'qrCode', category: 'barcode', labelKey: 'type.qrCode', display: 'image', domain: 'text' },
+            { id: 'barcode', category: 'barcode', labelKey: 'type.barcode', display: 'image', domain: 'text' },
+        ],
     },
 ];
 

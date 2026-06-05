@@ -1,38 +1,45 @@
 // 画像系ペイン (入力/出力 共通)。role で振る舞いを切り替える。
 //
-// - input:  ファイル選択 + クリップボード貼付 + 画像プレビュー (現状 QR コード読取)
-// - output: 画像プレビュー + 保存ボタン (+ QR コード生成オプションパネル)
+// - input:  ファイル選択 + クリップボード貼付 + 画像プレビュー (QR コード / バーコード読取)
+// - output: 画像プレビュー + 保存ボタン (+ QR コード / バーコード生成オプションパネル)
 import React from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTranslation } from 'react-i18next';
+import type { TypeId } from '@shared/conversion/catalog';
 import type { PaneValue } from '../../conversion/pane-value';
 import type { QrOptions } from '../../conversion/qr/generator';
+import type { BarcodeOptions } from '../../conversion/barcode/generator';
 import ImagePreview from './ImagePreview';
 import QrOptionsPanel from './QrOptionsPanel';
-import { EmptyStateBox, FILL_REMAINING_SX, RAW_MIME } from './shared';
+import BarcodeOptionsPanel from './BarcodeOptionsPanel';
+import { EmptyStateBox, FILL_REMAINING_SX, RAW_MIME, guessExtension } from './shared';
 
 type Role = 'input' | 'output';
 
 type Props = {
     role: Role;
+    type: TypeId;
     value: PaneValue;
     qrOptions: QrOptions;
+    barcodeOptions: BarcodeOptions;
     onValueChange: (value: PaneValue) => void;
     onQrOptionsChange: (next: Partial<QrOptions>) => void;
-    showQrOptions: boolean;
+    onBarcodeOptionsChange: (next: Partial<BarcodeOptions>) => void;
 };
 
 export default function ImagePane(props: Props) {
     if (props.role === 'input') return <ImageInput value={props.value} onChange={props.onValueChange} />;
     return (
         <ImageOutput
+            type={props.type}
             value={props.value}
             qrOptions={props.qrOptions}
+            barcodeOptions={props.barcodeOptions}
             onQrOptionsChange={props.onQrOptionsChange}
-            showQrOptions={props.showQrOptions}
+            onBarcodeOptionsChange={props.onBarcodeOptionsChange}
         />
     );
 }
@@ -105,27 +112,40 @@ function ImageInput({ value, onChange }: { value: PaneValue; onChange: (value: P
 // ==================== Output ====================
 
 function ImageOutput({
+    type,
     value,
     qrOptions,
+    barcodeOptions,
     onQrOptionsChange,
-    showQrOptions,
+    onBarcodeOptionsChange,
 }: {
+    type: TypeId;
     value: PaneValue;
     qrOptions: QrOptions;
+    barcodeOptions: BarcodeOptions;
     onQrOptionsChange: (next: Partial<QrOptions>) => void;
-    showQrOptions: boolean;
+    onBarcodeOptionsChange: (next: Partial<BarcodeOptions>) => void;
 }) {
     const { t } = useTranslation();
+    const isBarcode = type === 'barcode';
 
     const handleSave = async () => {
         if (value.kind !== 'image') return;
-        const ext = qrOptions.format === 'svg' ? 'svg' : 'png';
-        await window.encodelab.file.save({ suggestedName: `qrcode.${ext}`, bytes: value.bytes });
+        // 拡張子は UI の選択ではなく、生成済み画像の実際の MIME から決める。
+        // (変換後に出力形式ドロップダウンを変えても、表示中のバイト列は変換時の形式のままで、
+        //  これが保存すべき真の内容。UI の format を参照すると内容と拡張子が食い違う。)
+        const ext = guessExtension(value.mime) ?? 'bin';
+        const baseName = isBarcode ? 'barcode' : 'qrcode';
+        await window.encodelab.file.save({ suggestedName: `${baseName}.${ext}`, bytes: value.bytes });
     };
 
     return (
         <Stack spacing={1.5} sx={FILL_REMAINING_SX}>
-            {showQrOptions && <QrOptionsPanel options={qrOptions} onChange={onQrOptionsChange} />}
+            {isBarcode ? (
+                <BarcodeOptionsPanel options={barcodeOptions} onChange={onBarcodeOptionsChange} />
+            ) : (
+                <QrOptionsPanel options={qrOptions} onChange={onQrOptionsChange} />
+            )}
             {value.kind === 'image' && value.bytes.byteLength > 0 ? (
                 <>
                     <ImagePreview mime={value.mime} bytes={value.bytes} fill />

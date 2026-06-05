@@ -19,7 +19,7 @@ Pick a format for each of the two panes, press the button in the middle, and the
 | Integer | Decimal / Crockford Base32 |
 | Binary | Raw / data URL |
 | Hash (output only) | MD5 / SHA-1 / SHA-256 / SHA-512 (Hex / Base64) |
-| Image | QR Code (generation / reading) |
+| QR Code / Barcode | QR Code, plus 1D barcodes: JAN/EAN-13/8, UPC-A/E, CODE128, GS1-128, CODE39, ITF, NW-7 (generation / reading) |
 
 ## 2. Supported OS
 
@@ -146,6 +146,8 @@ src/
 - MIME auto-detection: [`file-type`](https://github.com/sindresorhus/file-type)
 - QR code generation: [`qrcode`](https://github.com/soldair/node-qrcode)
 - QR code reading: [`jsqr`](https://github.com/cozmo/jsQR)
+- Barcode generation: [`bwip-js`](https://github.com/metafloor/bwip-js)
+- Barcode reading: [`@zxing/library`](https://github.com/zxing-js/library)
 - Hashing: Node.js built-in `crypto`
 - Base/escape/structured codecs: in-house implementation under `src/renderer/conversion/`
 

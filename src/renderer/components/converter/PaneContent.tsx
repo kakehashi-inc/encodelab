@@ -8,6 +8,7 @@ import BinaryPane from './BinaryPane';
 import ImagePane from './ImagePane';
 import type { PaneValue } from '../../conversion/pane-value';
 import type { QrOptions } from '../../conversion/qr/generator';
+import type { BarcodeOptions } from '../../conversion/barcode/generator';
 
 type Role = 'input' | 'output';
 
@@ -16,11 +17,22 @@ type Props = {
     type: TypeId;
     value: PaneValue;
     qrOptions: QrOptions;
+    barcodeOptions: BarcodeOptions;
     onValueChange: (value: PaneValue) => void;
     onQrOptionsChange: (next: Partial<QrOptions>) => void;
+    onBarcodeOptionsChange: (next: Partial<BarcodeOptions>) => void;
 };
 
-export default function PaneContent({ role, type, value, qrOptions, onValueChange, onQrOptionsChange }: Props) {
+export default function PaneContent({
+    role,
+    type,
+    value,
+    qrOptions,
+    barcodeOptions,
+    onValueChange,
+    onQrOptionsChange,
+    onBarcodeOptionsChange,
+}: Props) {
     const def = findType(type);
 
     const renderInner = () => {
@@ -31,16 +43,17 @@ export default function PaneContent({ role, type, value, qrOptions, onValueChang
         if (def.display === 'binary') {
             return <BinaryPane role={role} value={value} onChange={onValueChange} />;
         }
-        // image
-        const showQrOptions = role === 'output' && def.id === 'qrCode';
+        // image (QR コード / バーコード)
         return (
             <ImagePane
                 role={role}
+                type={def.id}
                 value={value}
                 qrOptions={qrOptions}
+                barcodeOptions={barcodeOptions}
                 onValueChange={onValueChange}
                 onQrOptionsChange={onQrOptionsChange}
-                showQrOptions={showQrOptions}
+                onBarcodeOptionsChange={onBarcodeOptionsChange}
             />
         );
     };

@@ -27,6 +27,11 @@ export const BORDERED_BOX_SX = {
     borderRadius: 1,
 } as const;
 
+// QR / バーコードの「出力形式 (SVG/PNG)」セレクトの共通幅。
+// 隣接要素の flex 比に依存させると両パネルで幅がズレるため、固定幅で揃える。
+// 内容 (SVG/PNG) に合わせた狭い幅にする。
+export const FORMAT_SELECT_SX = { flex: 'none', width: 110 } as const;
+
 // MUI TextField (multiline) を残り高さいっぱいに伸ばすための共通 sx。
 // コードエディタ寄りの padding (8px / 12px) を採用。
 //

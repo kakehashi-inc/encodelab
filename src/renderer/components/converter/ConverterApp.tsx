@@ -26,11 +26,12 @@ import ConvertingOverlay from './ConvertingOverlay';
 import { FILL_REMAINING_SX } from './shared';
 
 export default function ConverterApp() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const direction = useConverterStore(s => s.direction);
     const left = useConverterStore(s => s.left);
     const right = useConverterStore(s => s.right);
     const qrOptions = useConverterStore(s => s.qrOptions);
+    const barcodeOptions = useConverterStore(s => s.barcodeOptions);
     const message = useConverterStore(s => s.message);
     const setValue = useConverterStore(s => s.setValue);
     const swapPanes = useConverterStore(s => s.swapPanes);
@@ -52,11 +53,12 @@ export default function ConverterApp() {
     const ctx: ConvertContext = React.useMemo(
         () => ({
             qrOptions,
+            barcodeOptions,
             computeHash: (algorithm, encoding, bytes) =>
                 window.encodelab.hash.compute({ algorithm, encoding, bytes }),
             detectMime: bytes => window.encodelab.mime.detect(bytes),
         }),
-        [qrOptions]
+        [qrOptions, barcodeOptions]
     );
 
     // 変換不可の理由 (変換ボタンのツールチップ向け)。変換可能なら undefined。
@@ -69,6 +71,21 @@ export default function ConverterApp() {
         }
         return t('reason.notConvertible');
     }, [compatibility, t]);
+
+    // 変換失敗結果を表示用テキストに変換する。
+    // errorKey があれば i18n で解決 (未定義キーは barcodeInput.generic にフォールバック)、
+    // 無ければ生メッセージを conversionFailed テンプレートに埋める。
+    const resolveErrorText = (result: { error: string; errorKey?: string; errorParams?: Record<string, string> }) => {
+        if (result.errorKey) {
+            if (i18n.exists(result.errorKey)) {
+                return t(result.errorKey, result.errorParams ?? {});
+            }
+            if (result.errorKey.startsWith('error.barcodeInput.')) {
+                return t('error.barcodeInput.generic');
+            }
+        }
+        return t('error.conversionFailed', { message: result.error });
+    };
 
     const handleConvert = async () => {
         clearMessage();
@@ -83,10 +100,7 @@ export default function ConverterApp() {
                 setValue(outSide, result.value);
                 setMessage({ severity: 'success', text: t('message.conversionSucceeded') });
             } else {
-                setMessage({
-                    severity: 'error',
-                    text: t('error.conversionFailed', { message: result.error }),
-                });
+                setMessage({ severity: 'error', text: resolveErrorText(result) });
             }
         } finally {
             setBusy(false);

@@ -26,12 +26,15 @@ import { encodeHexString, decodeHexString } from './structured/hex-string';
 import { encodeDataUrl, decodeDataUrl } from './binary/data-url';
 import { generateQrCode, type QrOptions, DEFAULT_QR_OPTIONS } from './qr/generator';
 import { readQrCode } from './qr/reader';
+import { generateBarcode, type BarcodeOptions, DEFAULT_BARCODE_OPTIONS } from './barcode/generator';
+import { readBarcode } from './barcode/reader';
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder('utf-8', { fatal: false });
 
 export type ConvertContext = {
     qrOptions?: QrOptions;
+    barcodeOptions?: BarcodeOptions;
     // ハッシュ計算 / MIME 自動判定は main プロセスへ委譲する
     computeHash: (
         algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512',
@@ -56,9 +59,13 @@ export async function parsePane(typeId: TypeId, value: PaneValue): Promise<Canon
             return { kind: 'bytes', bytes };
         }
         case 'image': {
-            // 現状 image 表示の入力タイプは QR コードのみ
+            // image 表示の入力タイプは QR コード / バーコード。画像からテキストを読み取る。
             if (value.kind !== 'image') {
                 throw new Error('Image input expects an image');
+            }
+            if (def.id === 'barcode') {
+                const result = await readBarcode(value.mime, value.bytes);
+                return { kind: 'text', text: result.text };
             }
             const result = await readQrCode(value.mime, value.bytes);
             return { kind: 'text', text: result.text };
@@ -141,8 +148,13 @@ export async function serializePane(
             };
         }
         case 'image': {
-            // 現状 image 表示の出力タイプは QR コードのみ
+            // image 表示の出力タイプは QR コード / バーコード。テキストから画像を生成する。
             const text = canonical.kind === 'text' ? canonical.text : decodeUtf8(ensureBytes(canonical));
+            if (def.id === 'barcode') {
+                const opts = ctx.barcodeOptions ?? DEFAULT_BARCODE_OPTIONS;
+                const result = await generateBarcode(text, opts);
+                return { kind: 'image', mime: result.mime, bytes: result.bytes };
+            }
             const opts = ctx.qrOptions ?? DEFAULT_QR_OPTIONS;
             const result = await generateQrCode(text, opts);
             return { kind: 'image', mime: result.mime, bytes: result.bytes };

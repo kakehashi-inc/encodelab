@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { CATEGORIES, defaultTypeOfCategory, findType, type CategoryId, type TypeId } from '@shared/conversion/catalog';
 import { EMPTY_PANE_VALUE, type PaneValue } from '../conversion/pane-value';
 import { DEFAULT_QR_OPTIONS, type QrOptions } from '../conversion/qr/generator';
+import { DEFAULT_BARCODE_OPTIONS, type BarcodeOptions } from '../conversion/barcode/generator';
 
 // 矢印の向き。
 // - 'rtl'（→）: 左ペインが入力、右ペインが出力
@@ -30,6 +31,7 @@ type ConverterState = {
     left: PaneState;
     right: PaneState;
     qrOptions: QrOptions;
+    barcodeOptions: BarcodeOptions;
     // 直近の変換結果メッセージ (下段バーに表示)。未設定ならバーは非表示。
     message?: ConverterMessage;
 
@@ -39,6 +41,7 @@ type ConverterState = {
     setValue(side: Side, value: PaneValue): void;
     swapPanes(): void;
     setQrOptions(options: Partial<QrOptions>): void;
+    setBarcodeOptions(options: Partial<BarcodeOptions>): void;
     setMessage(message: ConverterMessage | undefined): void;
     clearMessage(): void;
     clearBothPanes(): void;
@@ -61,7 +64,8 @@ export const useConverterStore = create<ConverterState>(set => ({
     left: INITIAL_LEFT,
     right: INITIAL_RIGHT,
     qrOptions: DEFAULT_QR_OPTIONS,
-    errorMessage: undefined,
+    barcodeOptions: DEFAULT_BARCODE_OPTIONS,
+    message: undefined,
 
     setCategory(side, category) {
         set(state => {
@@ -117,6 +121,10 @@ export const useConverterStore = create<ConverterState>(set => ({
 
     setQrOptions(options) {
         set(state => ({ ...state, qrOptions: { ...state.qrOptions, ...options } }));
+    },
+
+    setBarcodeOptions(options) {
+        set(state => ({ ...state, barcodeOptions: { ...state.barcodeOptions, ...options } }));
     },
 
     setMessage(message) {

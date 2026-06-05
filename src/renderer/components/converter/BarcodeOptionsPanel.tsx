@@ -1,7 +1,9 @@
-// QR コード生成オプションパネル (出力側 image=qrCode のとき表示)
+// バーコード生成オプションパネル (出力側 barcode=barcode のとき表示)
 import {
     Box,
+    Checkbox,
     FormControl,
+    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
@@ -10,17 +12,29 @@ import {
     Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { QrOptions, QrErrorCorrection, QrFormat } from '../../conversion/qr/generator';
+import type { BarcodeOptions, BarcodeSymbology, BarcodeFormat } from '../../conversion/barcode/generator';
 import { BORDERED_BOX_SX, FORMAT_SELECT_SX } from './shared';
 
 type Props = {
-    options: QrOptions;
-    onChange: (next: Partial<QrOptions>) => void;
+    options: BarcodeOptions;
+    onChange: (next: Partial<BarcodeOptions>) => void;
 };
 
-export default function QrOptionsPanel({ options, onChange }: Props) {
+// 規格の選択肢。ラベルは規格名そのものなので i18n しない。
+const SYMBOLOGIES: { value: BarcodeSymbology; label: string }[] = [
+    { value: 'code128', label: 'CODE128' },
+    { value: 'gs1-128', label: 'GS1-128' },
+    { value: 'ean13', label: 'JAN / EAN-13' },
+    { value: 'ean8', label: 'EAN-8' },
+    { value: 'upca', label: 'UPC-A' },
+    { value: 'upce', label: 'UPC-E' },
+    { value: 'code39', label: 'CODE39' },
+    { value: 'interleaved2of5', label: 'ITF (Interleaved 2 of 5)' },
+    { value: 'rationalizedCodabar', label: 'NW-7 (Codabar)' },
+];
+
+export default function BarcodeOptionsPanel({ options, onChange }: Props) {
     const { t } = useTranslation();
-    const isPng = options.format === 'png';
 
     return (
         <Box sx={{ ...BORDERED_BOX_SX, p: 1.5, bgcolor: 'background.paper' }}>
@@ -31,23 +45,24 @@ export default function QrOptionsPanel({ options, onChange }: Props) {
                         <Select
                             label={t('pane.qrFormat')}
                             value={options.format}
-                            onChange={e => onChange({ format: e.target.value as QrFormat })}
+                            onChange={e => onChange({ format: e.target.value as BarcodeFormat })}
                         >
                             <MenuItem value='svg'>SVG</MenuItem>
                             <MenuItem value='png'>PNG</MenuItem>
                         </Select>
                     </FormControl>
                     <FormControl size='small' sx={{ flex: 1 }}>
-                        <InputLabel>{t('pane.qrErrorCorrection')}</InputLabel>
+                        <InputLabel>{t('pane.barcodeSymbology')}</InputLabel>
                         <Select
-                            label={t('pane.qrErrorCorrection')}
-                            value={options.errorCorrection}
-                            onChange={e => onChange({ errorCorrection: e.target.value as QrErrorCorrection })}
+                            label={t('pane.barcodeSymbology')}
+                            value={options.symbology}
+                            onChange={e => onChange({ symbology: e.target.value as BarcodeSymbology })}
                         >
-                            <MenuItem value='L'>L (7%)</MenuItem>
-                            <MenuItem value='M'>M (15%)</MenuItem>
-                            <MenuItem value='Q'>Q (25%)</MenuItem>
-                            <MenuItem value='H'>H (30%)</MenuItem>
+                            {SYMBOLOGIES.map(s => (
+                                <MenuItem key={s.value} value={s.value}>
+                                    {s.label}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 </Stack>
@@ -55,19 +70,30 @@ export default function QrOptionsPanel({ options, onChange }: Props) {
                     <TextField
                         size='small'
                         type='number'
-                        label={t('pane.qrCellSize')}
-                        value={options.cellSize}
-                        disabled={!isPng}
-                        onChange={e => onChange({ cellSize: clamp(Number(e.target.value), 1, 64) })}
+                        label={t('pane.barcodeScale')}
+                        value={options.scale}
+                        onChange={e => onChange({ scale: clamp(Number(e.target.value), 1, 10) })}
                         sx={{ flex: 1 }}
                     />
                     <TextField
                         size='small'
                         type='number'
-                        label={t('pane.qrMargin')}
-                        value={options.margin}
-                        onChange={e => onChange({ margin: clamp(Number(e.target.value), 0, 16) })}
+                        label={t('pane.barcodeHeight')}
+                        value={options.height}
+                        onChange={e => onChange({ height: clamp(Number(e.target.value), 1, 100) })}
                         sx={{ flex: 1 }}
+                    />
+                </Stack>
+                <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size='small'
+                                checked={options.includeText}
+                                onChange={e => onChange({ includeText: e.target.checked })}
+                            />
+                        }
+                        label={<Typography variant='caption'>{t('pane.barcodeIncludeText')}</Typography>}
                     />
                 </Stack>
                 <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>

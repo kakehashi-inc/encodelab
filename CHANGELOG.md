@@ -9,18 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The "Image" category is now "QR Code / Barcode". QR Code has moved here from the old Image category.
 - Simpler conversion controls: press the arrow button in the center to convert, and use the new swap button to exchange the left and right panes.
 - Result messages now appear only after a conversion, in a colored banner (green for success, red for errors) that you can dismiss at any time.
 - Long text and large images no longer stretch the window; they scroll inside their own area, and the buttons around them always stay visible.
 
 ### Added
 
+- 1D barcode support (generation and reading): JAN/EAN-13/8, UPC-A/E, CODE128, GS1-128, CODE39, ITF, and NW-7 (Codabar), alongside the existing QR Code, under the new "QR Code / Barcode" category. Reading works on tilted photos by scanning the image at multiple rotation angles.
 - A "Converting..." indicator is shown while a conversion is running, so the app no longer looks frozen during heavy conversions.
 - Automatic updates now work on macOS.
 - If an update fails to download, a clear error message appears with "Retry" and "Close" buttons.
 
 ### Fixed
 
+- Saving a QR Code / barcode image now uses the actual format of the generated image, so the file extension always matches its contents. Previously, changing the output format dropdown after converting could save an SVG with a `.png` name (or vice versa).
+- When a barcode cannot be generated because the input does not match the symbology (e.g. GS1-128 without parenthesized AIs, EAN-13 with non-numeric text), a clear per-symbology message is now shown instead of the raw `bwipp.*` library error.
 - Changing the format of one pane no longer erases what you entered in the other pane.
 - Long results no longer spill past the edge of the window; they now scroll inside their own area.
 - After you choose to update, progress is shown right away instead of the app appearing to do nothing.

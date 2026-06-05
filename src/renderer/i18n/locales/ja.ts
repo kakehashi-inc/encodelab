@@ -58,6 +58,10 @@ export default {
         qrMargin: 'マージン (モジュール)',
         qrForeground: '前景色',
         qrBackground: '背景色',
+        barcodeSymbology: '規格',
+        barcodeScale: '倍率',
+        barcodeHeight: 'バーの高さ',
+        barcodeIncludeText: '文字を表示',
     },
     category: {
         text: 'テキスト',
@@ -67,7 +71,7 @@ export default {
         integer: '整数',
         binary: 'バイナリ',
         hash: 'ハッシュ (出力専用)',
-        image: '画像',
+        barcode: 'QRコード・バーコード',
     },
     type: {
         plain: 'Plain',
@@ -99,6 +103,7 @@ export default {
         sha512Hex: 'SHA-512 (Hex)',
         sha512Base64: 'SHA-512 (Base64)',
         qrCode: 'QR コード',
+        barcode: 'バーコード',
     },
     reason: {
         hashOutputOnly: 'ハッシュは出力専用です。',
@@ -110,5 +115,20 @@ export default {
     error: {
         emptyInput: '入力が空です。',
         conversionFailed: '変換に失敗しました: {{message}}',
+        // バーコード生成時の入力要件エラー (規格ごと)
+        barcodeInput: {
+            generic: 'この規格で扱えない入力です。規格の仕様に沿った値を入力してください。',
+            ean13: 'EAN-13 / JAN は数字 12 桁 (チェックディジットを含めると 13 桁) で入力してください。',
+            ean8: 'EAN-8 は数字 7 桁 (チェックディジットを含めると 8 桁) で入力してください。',
+            upca: 'UPC-A は数字 11 桁 (チェックディジットを含めると 12 桁) で入力してください。',
+            upce: 'UPC-E は数字で入力してください。',
+            'gs1-128':
+                "GS1-128 はアプリケーション識別子 (AI) を括弧付きで入力してください。例: (01)04912345678904",
+            interleaved2of5: 'ITF (Interleaved 2 of 5) は桁数が偶数の数字で入力してください。',
+            rationalizedCodabar:
+                'NW-7 (Codabar) は A〜D のいずれかで開始・終了し、間は数字と記号 (- $ : / . +) で入力してください。例: A1234A',
+            code39: 'CODE39 は半角の数字・英大文字・スペースと記号 (- . $ / + %) のみ入力できます。',
+            code128: 'CODE128 で扱えない文字が含まれています。',
+        },
     },
 };
