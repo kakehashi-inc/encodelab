@@ -2,6 +2,7 @@
 // 枠 (Paper) は親側 (Pane.tsx) で持つので、ここでは内部要素のみを返す。
 import { Box } from '@mui/material';
 import { findType, type TypeId } from '@shared/conversion/catalog';
+import { FILL_REMAINING_SX } from './shared';
 import TextPane from './TextPane';
 import BinaryPane from './BinaryPane';
 import ImagePane from './ImagePane';
@@ -45,6 +46,6 @@ export default function PaneContent({ role, type, value, qrOptions, onValueChang
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}>{renderInner()}</Box>
+        <Box sx={{ ...FILL_REMAINING_SX, display: 'flex', flexDirection: 'column' }}>{renderInner()}</Box>
     );
 }

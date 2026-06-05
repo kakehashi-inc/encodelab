@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { QrOptions, QrErrorCorrection, QrFormat } from '../../conversion/qr/generator';
+import { BORDERED_BOX_SX } from './shared';
 
 type Props = {
     options: QrOptions;
@@ -22,15 +23,7 @@ export default function QrOptionsPanel({ options, onChange }: Props) {
     const isPng = options.format === 'png';
 
     return (
-        <Box
-            sx={{
-                p: 1.5,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                bgcolor: 'background.paper',
-            }}
-        >
+        <Box sx={{ ...BORDERED_BOX_SX, p: 1.5, bgcolor: 'background.paper' }}>
             <Stack spacing={1.5}>
                 <Stack direction='row' spacing={1}>
                     <FormControl size='small' sx={{ flex: 1 }}>

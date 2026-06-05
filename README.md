@@ -4,16 +4,9 @@ A two-pane Electron desktop tool for bidirectional conversion of text and binary
 
 ## 1. Overview
 
-- 3-column layout (left pane / center controls / right pane).
-- Each pane has a two-level dropdown (Category > Type) that determines the data format it handles.
-- The center direction arrow (→ / ←) swaps the input/output roles. Flipping alone does not run a conversion.
-- The center Convert button runs the conversion (no real-time conversion).
-- Incompatible combinations disable the Convert button and show the reason in the center area.
-- Both panes are cleared whenever you change a category or type. Flipping the direction preserves data.
-- No conversion history is kept.
+EncodeLab brings the data conversions you reach for every day — Base64 and URL encoding, JSON/YAML conversion, hash calculation, QR code generation and reading — together in a single window.
 
-See [Documents/システム仕様.md](Documents/システム仕様.md) (Japanese) for the full functional spec
-and [Documents/アーキテクチャ.md](Documents/アーキテクチャ.md) for the internal design.
+Pick a format for each of the two panes, press the button in the middle, and the conversion is done. That is all there is to it.
 
 ### Supported formats
 
@@ -28,14 +21,6 @@ and [Documents/アーキテクチャ.md](Documents/アーキテクチャ.md) for
 | Hash (output only) | MD5 / SHA-1 / SHA-256 / SHA-512 (Hex / Base64) |
 | Image | QR Code (generation / reading) |
 
-### Library policy
-
-- MIME auto-detection: [`file-type`](https://github.com/sindresorhus/file-type)
-- QR code generation: [`qrcode`](https://github.com/soldair/node-qrcode)
-- QR code reading: [`jsqr`](https://github.com/cozmo/jsQR)
-- Hashing: Node.js built-in `crypto`
-- Base/escape/structured codecs: in-house implementation under `src/renderer/conversion/`
-
 ## 2. Supported OS
 
 - Windows 10/11
@@ -43,8 +28,6 @@ and [Documents/アーキテクチャ.md](Documents/アーキテクチャ.md) for
 - Linux (Debian / RHEL families)
 
 Note: This project does not sign Windows builds. If SmartScreen warns you, choose "More info" → "Run anyway".
-
-## 3. Developer reference
 
 ### Requirements
 
@@ -157,6 +140,14 @@ src/
 - **i18next**
 - **Vite**
 - **qrcode** / **jsqr** / **file-type**
+
+### Library policy
+
+- MIME auto-detection: [`file-type`](https://github.com/sindresorhus/file-type)
+- QR code generation: [`qrcode`](https://github.com/soldair/node-qrcode)
+- QR code reading: [`jsqr`](https://github.com/cozmo/jsQR)
+- Hashing: Node.js built-in `crypto`
+- Base/escape/structured codecs: in-house implementation under `src/renderer/conversion/`
 
 ### Generating the Windows icon
 

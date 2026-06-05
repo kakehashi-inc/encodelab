@@ -70,12 +70,10 @@ export const useConverterStore = create<ConverterState>(set => ({
                 type: defaultTypeOfCategory(category),
                 value: EMPTY_PANE_VALUE,
             };
+            // 変更した側のみクリア。反対側のペインは関係ないため維持する。
             return {
                 ...state,
                 [side]: next,
-                // 反対側もデータをクリア (要件 §7)
-                left: side === 'left' ? next : { ...state.left, value: EMPTY_PANE_VALUE },
-                right: side === 'right' ? next : { ...state.right, value: EMPTY_PANE_VALUE },
                 message: undefined,
             };
         });
@@ -89,10 +87,10 @@ export const useConverterStore = create<ConverterState>(set => ({
                 type,
                 value: EMPTY_PANE_VALUE,
             };
+            // 変更した側のみクリア。反対側のペインは関係ないため維持する。
             return {
                 ...state,
-                left: side === 'left' ? next : { ...state.left, value: EMPTY_PANE_VALUE },
-                right: side === 'right' ? next : { ...state.right, value: EMPTY_PANE_VALUE },
+                [side]: next,
                 message: undefined,
             };
         });

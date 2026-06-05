@@ -28,6 +28,7 @@ export default {
         paste: 'Paste image',
         clear: 'Clear',
         convert: 'Convert',
+        converting: 'Converting...',
         swapPanes: 'Swap panes',
         searchType: 'Search type',
         searchPlaceholder: 'Search type name…',

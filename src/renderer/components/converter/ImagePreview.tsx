@@ -3,15 +3,17 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { PREVIEWABLE_MIMES } from './shared';
+import { BORDERED_BOX_SX, PREVIEWABLE_MIMES } from './shared';
 
 type Props = {
     mime: string;
     bytes: Uint8Array;
     minHeight?: number | string;
+    // true のとき、親 flex の残り高さを占有し、画像が枠を超えたら枠内でスクロールする。
+    fill?: boolean;
 };
 
-export default function ImagePreview({ mime, bytes, minHeight = 220 }: Props) {
+export default function ImagePreview({ mime, bytes, minHeight = 220, fill = false }: Props) {
     const { t } = useTranslation();
     const url = React.useMemo(() => {
         if (!PREVIEWABLE_MIMES.has(mime) || bytes.byteLength === 0) return null;
@@ -30,13 +32,11 @@ export default function ImagePreview({ mime, bytes, minHeight = 220 }: Props) {
         return (
             <Box
                 sx={{
+                    ...BORDERED_BOX_SX,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     minHeight,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
                     bgcolor: 'action.hover',
                 }}
             >
@@ -50,23 +50,30 @@ export default function ImagePreview({ mime, bytes, minHeight = 220 }: Props) {
     return (
         <Box
             sx={{
+                ...BORDERED_BOX_SX,
                 display: 'flex',
-                alignItems: 'center',
+                // スクロール時に画像の上端から見えるよう、fill のときは上寄せにする。
+                alignItems: fill ? 'flex-start' : 'center',
                 justifyContent: 'center',
-                minHeight,
                 p: 1,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
                 bgcolor: 'background.default',
-                overflow: 'hidden',
+                // fill: 残り高さを占有し、枠を超えた画像は枠内でスクロールする。
+                // 非 fill: 中身に応じた高さ (minHeight 下限) で、枠は縮ませない。
+                ...(fill
+                    ? { flexGrow: 1, minHeight: 0, overflow: 'auto' }
+                    : { minHeight, flexShrink: 0, overflow: 'hidden' }),
             }}
         >
             <Box
                 component='img'
                 src={url}
                 alt='preview'
-                sx={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }}
+                sx={
+                    fill
+                        ? // 横幅は枠に収め、縦は原寸 (はみ出したら枠スクロール)。flexShrink:0 で潰れ防止。
+                          { maxWidth: '100%', height: 'auto', flexShrink: 0 }
+                        : { maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }
+                }
             />
         </Box>
     );

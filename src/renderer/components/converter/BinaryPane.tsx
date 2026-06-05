@@ -26,9 +26,11 @@ import { decodeAsText, looksLikeText } from '../../conversion/text-detect';
 import ImagePreview from './ImagePreview';
 import CopyButton from './CopyButton';
 import {
+    BORDERED_BOX_SX,
     COMMON_MIMES,
     EmptyStateBox,
     FILL_HEIGHT_TEXTAREA_SX,
+    FILL_REMAINING_SX,
     PREVIEWABLE_MIMES,
     RAW_MIME,
     guessExtension,
@@ -69,21 +71,13 @@ function BinaryInput({ value, onChange }: { value: PaneValue; onChange: (value: 
     const showPreview = isReady && value.kind === 'binary' && PREVIEWABLE_MIMES.has(value.mime);
 
     return (
-        <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
-            <Box>
+        <Stack spacing={1.5} sx={FILL_REMAINING_SX}>
+            <Box sx={{ flexShrink: 0 }}>
                 <Button variant='contained' startIcon={<UploadFileIcon />} onClick={handleOpen}>
                     {t('common.open')}
                 </Button>
             </Box>
-            <Box
-                sx={{
-                    p: 1.5,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    bgcolor: 'action.hover',
-                }}
-            >
+            <Box sx={{ ...BORDERED_BOX_SX, flexShrink: 0, p: 1.5, bgcolor: 'action.hover' }}>
                 {isReady && value.kind === 'binary' ? (
                     <Stack spacing={0.5}>
                         <Typography variant='body2' sx={{ wordBreak: 'break-all' }}>
@@ -99,7 +93,9 @@ function BinaryInput({ value, onChange }: { value: PaneValue; onChange: (value: 
                     </Typography>
                 )}
             </Box>
-            {showPreview && value.kind === 'binary' && <ImagePreview mime={value.mime} bytes={value.bytes} />}
+            {showPreview && value.kind === 'binary' && (
+                <ImagePreview mime={value.mime} bytes={value.bytes} fill />
+            )}
         </Stack>
     );
 }
@@ -138,22 +134,14 @@ function BinaryOutput({ value, onChange }: { value: PaneValue; onChange: (value:
     };
 
     return (
-        <Stack spacing={1.5} sx={{ flexGrow: 1, minHeight: 0 }}>
-            <Box
-                sx={{
-                    p: 1.5,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    bgcolor: 'action.hover',
-                }}
-            >
+        <Stack spacing={1.5} sx={FILL_REMAINING_SX}>
+            <Box sx={{ ...BORDERED_BOX_SX, flexShrink: 0, p: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant='body2'>
                     {t('pane.outputBinaryReady', { count: value.bytes.byteLength })}
                 </Typography>
             </Box>
 
-            <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+            <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
                 <FormControl size='small' sx={{ minWidth: 200, flex: 1 }}>
                     <InputLabel>{t('pane.mime')}</InputLabel>
                     <Select
@@ -190,10 +178,10 @@ function BinaryOutput({ value, onChange }: { value: PaneValue; onChange: (value:
                 </Button>
             </Stack>
 
-            {detection.kind === 'image' && <ImagePreview mime={value.mime} bytes={value.bytes} />}
+            {detection.kind === 'image' && <ImagePreview mime={value.mime} bytes={value.bytes} fill />}
 
             {detection.kind === 'text' && (
-                <Stack spacing={1} sx={{ flexGrow: 1, minHeight: 0 }}>
+                <Stack spacing={1} sx={FILL_REMAINING_SX}>
                     <TextField
                         multiline
                         fullWidth

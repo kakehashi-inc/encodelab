@@ -2,18 +2,11 @@
 
 文字列・バイナリデータの各種変換を 2 ペイン構成で双方向に行う Electron 製デスクトップツール。
 
-## 1. システム概要
+## 1. 概要
 
-- 3 カラム構成 (左ペイン / 中央コントロール / 右ペイン)
-- 各ペイン上部のカテゴリ・タイプの 2 段ドロップダウンで扱う形式を選択
-- 中央の方向矢印 (→ / ←) で入出力の役割を切り替え (反転だけでは変換は実行されない)
-- 中央の変換ボタンで変換を実行 (リアルタイム変換は行わない)
-- 変換不能な組合せは変換ボタンが disabled になり、その理由が中央エリアに表示される
-- カテゴリ・タイプの切替時は両ペインのデータをクリア。方向反転時は保持
-- 変換履歴は保持しない
+EncodeLab は、Base64 や URL エンコードなどの文字列変換、JSON/YAML の相互変換、ハッシュ値の計算、QR コードの生成・読取といった、開発や調査でよく使うデータ変換をひとつの画面で行えるツールです。
 
-詳細な機能仕様は [Documents/システム仕様.md](Documents/システム仕様.md) を参照。
-内部設計は [Documents/アーキテクチャ.md](Documents/アーキテクチャ.md) を参照。
+左右 2 つのペインにそれぞれ形式を選び、中央のボタンで変換するだけのシンプルな操作で利用できます。
 
 ### 対応データ形式
 
@@ -28,14 +21,6 @@
 | ハッシュ (出力専用) | MD5 / SHA-1 / SHA-256 / SHA-512 (Hex / Base64) |
 | 画像 | QR コード (生成 / 読取) |
 
-### ライブラリ方針
-
-- MIME 自動判定: [`file-type`](https://github.com/sindresorhus/file-type)
-- QR コード生成: [`qrcode`](https://github.com/soldair/node-qrcode)
-- QR コード読取: [`jsqr`](https://github.com/cozmo/jsQR)
-- ハッシュ: Node.js 標準 `crypto`
-- Base 系全般 / エスケープ系 / JSON↔YAML: 自前実装 (`src/renderer/conversion/`)
-
 ## 2. 対応OS
 
 - Windows 10/11
@@ -43,8 +28,6 @@
 - Linux (Debian系/RHEL系)
 
 注記: 本プロジェクトは Windows ではコード署名を行っていません。SmartScreen が警告を表示する場合は「詳細情報」→「実行」を選択してください。
-
-## 3. 開発者向けリファレンス
 
 ### 必要要件
 
@@ -152,6 +135,14 @@ src/
 - **i18next**
 - **Vite**
 - **qrcode** / **jsqr** / **file-type**
+
+### ライブラリ方針
+
+- MIME 自動判定: [`file-type`](https://github.com/sindresorhus/file-type)
+- QR コード生成: [`qrcode`](https://github.com/soldair/node-qrcode)
+- QR コード読取: [`jsqr`](https://github.com/cozmo/jsQR)
+- ハッシュ: Node.js 標準 `crypto`
+- Base 系全般 / エスケープ系 / JSON↔YAML: 自前実装 (`src/renderer/conversion/`)
 
 ### Windows用アイコンの作成
 

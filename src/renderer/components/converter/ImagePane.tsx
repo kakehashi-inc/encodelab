@@ -12,7 +12,7 @@ import type { PaneValue } from '../../conversion/pane-value';
 import type { QrOptions } from '../../conversion/qr/generator';
 import ImagePreview from './ImagePreview';
 import QrOptionsPanel from './QrOptionsPanel';
-import { EmptyStateBox, RAW_MIME } from './shared';
+import { EmptyStateBox, FILL_REMAINING_SX, RAW_MIME } from './shared';
 
 type Role = 'input' | 'output';
 
@@ -74,7 +74,7 @@ function ImageInput({ value, onChange }: { value: PaneValue; onChange: (value: P
     const isReady = value.kind === 'image' && value.bytes.byteLength > 0;
 
     return (
-        <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
+        <Stack spacing={1.5} sx={FILL_REMAINING_SX}>
             <Stack direction='row' spacing={1}>
                 <Button variant='contained' startIcon={<UploadFileIcon />} onClick={handleOpen}>
                     {t('common.open')}
@@ -93,7 +93,7 @@ function ImageInput({ value, onChange }: { value: PaneValue; onChange: (value: P
                     <Typography variant='caption' color='text.secondary'>
                         {t('pane.outputBinaryReady', { count: value.bytes.byteLength })} · {value.mime}
                     </Typography>
-                    <ImagePreview mime={value.mime} bytes={value.bytes} />
+                    <ImagePreview mime={value.mime} bytes={value.bytes} fill />
                 </>
             ) : (
                 <EmptyStateBox message={t('pane.binaryNoFile')} />
@@ -124,12 +124,17 @@ function ImageOutput({
     };
 
     return (
-        <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
+        <Stack spacing={1.5} sx={FILL_REMAINING_SX}>
             {showQrOptions && <QrOptionsPanel options={qrOptions} onChange={onQrOptionsChange} />}
             {value.kind === 'image' && value.bytes.byteLength > 0 ? (
                 <>
-                    <ImagePreview mime={value.mime} bytes={value.bytes} />
-                    <Stack direction='row' spacing={1} sx={{ alignItems: 'center', justifyContent: 'flex-end' }}>
+                    <ImagePreview mime={value.mime} bytes={value.bytes} fill />
+                    {/* 保存行はプレビュー枠の下に常に表示する (プレビューが fill で伸縮する) */}
+                    <Stack
+                        direction='row'
+                        spacing={1}
+                        sx={{ alignItems: 'center', justifyContent: 'flex-end', flexShrink: 0 }}
+                    >
                         <Typography variant='caption' color='text.secondary'>
                             {t('pane.outputBinaryReady', { count: value.bytes.byteLength })} · {value.mime}
                         </Typography>

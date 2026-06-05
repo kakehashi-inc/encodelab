@@ -28,6 +28,7 @@ export default {
         paste: '画像を貼付',
         clear: 'クリア',
         convert: '変換',
+        converting: '変換中...',
         swapPanes: '左右のペインを入れ替え',
         searchType: 'タイプ検索',
         searchPlaceholder: 'タイプ名で検索…',

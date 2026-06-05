@@ -11,13 +11,16 @@ type Props = {
     onTypeChange: (id: TypeId) => void;
 };
 
+// カテゴリ / タイプ ドロップダウン共通の幅指定。
+const SELECT_FC_SX = { minWidth: 180, flex: 1 } as const;
+
 export default function PaneSelectors({ category, type, onCategoryChange, onTypeChange }: Props) {
     const { t } = useTranslation();
     const types = findCategory(category).types;
 
     return (
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-            <FormControl size='small' sx={{ minWidth: 180, flex: 1 }}>
+            <FormControl size='small' sx={SELECT_FC_SX}>
                 <InputLabel>{t('pane.category')}</InputLabel>
                 <Select
                     label={t('pane.category')}
@@ -31,7 +34,7 @@ export default function PaneSelectors({ category, type, onCategoryChange, onType
                     ))}
                 </Select>
             </FormControl>
-            <FormControl size='small' sx={{ minWidth: 180, flex: 1 }}>
+            <FormControl size='small' sx={SELECT_FC_SX}>
                 <InputLabel>{t('pane.type')}</InputLabel>
                 <Select label={t('pane.type')} value={type} onChange={e => onTypeChange(e.target.value as TypeId)}>
                     {types.map(t2 => (

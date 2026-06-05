@@ -4,7 +4,7 @@
 import { Box, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import CopyButton from './CopyButton';
-import { FILL_HEIGHT_TEXTAREA_SX } from './shared';
+import { FILL_HEIGHT_TEXTAREA_SX, FILL_REMAINING_SX } from './shared';
 
 type Props = {
     value: string;
@@ -15,7 +15,7 @@ type Props = {
 export default function TextPane({ value, onChange, placeholder }: Props) {
     const { t } = useTranslation();
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexGrow: 1, minHeight: 0 }}>
+        <Box sx={{ ...FILL_REMAINING_SX, display: 'flex', flexDirection: 'column', gap: 1 }}>
             <TextField
                 multiline
                 fullWidth

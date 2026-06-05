@@ -9,6 +9,7 @@ import { Box, Paper } from '@mui/material';
 import { useConverterStore, inputSide, type Side } from '../../store/converter-store';
 import PaneHeader from './PaneHeader';
 import PaneContent from './PaneContent';
+import { FILL_REMAINING_SX } from './shared';
 
 type Props = {
     side: Side;
@@ -44,7 +45,7 @@ export default function Pane({ side }: Props) {
                 onCategoryChange={c => setCategory(side, c)}
                 onTypeChange={ty => setType(side, ty)}
             />
-            <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ ...FILL_REMAINING_SX, display: 'flex', flexDirection: 'column' }}>
                 <PaneContent
                     role={role}
                     type={pane.type}

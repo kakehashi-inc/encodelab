@@ -22,6 +22,8 @@ import type { ConvertContext } from '../../conversion/handlers';
 import Pane from './Pane';
 import CenterControls from './CenterControls';
 import BottomBar from './BottomBar';
+import ConvertingOverlay from './ConvertingOverlay';
+import { FILL_REMAINING_SX } from './shared';
 
 export default function ConverterApp() {
     const { t } = useTranslation();
@@ -71,6 +73,10 @@ export default function ConverterApp() {
     const handleConvert = async () => {
         clearMessage();
         setBusy(true);
+        // runConversion は Base58 など同期 CPU 処理を含み UI スレッドをブロックする。
+        // オーバーレイ (busy=true) が画面に描画されてから重い処理に入るよう、
+        // 描画コミットを待つ (rAF を 2 回 ≒ 次フレーム以降に実行)。
+        await waitForPaint();
         try {
             const result = await runConversion(inputPane.type, inputPane.value, outputPane.type, ctx);
             if (result.ok) {
@@ -97,15 +103,19 @@ export default function ConverterApp() {
                 height: '100%',
                 minHeight: 0,
                 boxSizing: 'border-box',
+                // 変換中オーバーレイ (Backdrop) の配置基準。
+                position: 'relative',
             }}
         >
             <Box
                 sx={{
+                    ...FILL_REMAINING_SX,
                     display: 'grid',
                     gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+                    // 行を 1fr に固定。これがないと暗黙の行 (auto) が内容で伸び、
+                    // Pane (height:100%) ごとウィンドウ縦幅を超えて広がってしまう。
+                    gridTemplateRows: 'minmax(0, 1fr)',
                     columnGap: 2,
-                    flexGrow: 1,
-                    minHeight: 0,
                 }}
             >
                 <Pane side='left' />
@@ -134,6 +144,15 @@ export default function ConverterApp() {
             {message && (
                 <BottomBar severity={message.severity} message={message.text} onClose={clearMessage} />
             )}
+            <ConvertingOverlay open={busy} />
         </Box>
     );
+}
+
+// オーバーレイの描画コミットを待つ。requestAnimationFrame を 2 回挟むことで
+// 「状態更新 -> 再レンダリング -> ペイント」が完了してから次の処理に進む。
+function waitForPaint(): Promise<void> {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
 }
