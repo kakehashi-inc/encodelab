@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [v0.2.2] - 2026-06-26
+
+### Added
+
+- The converter now remembers the input and output type selection of both panes and restores them the next time you open the app.
+
+### Fixed
+
+- QR code reading now works with common image formats (PNG, JPEG, GIF, WebP, SVG).
+- SVG images are now recognized correctly, including SVG files that start with an XML declaration (which previously failed to preview and could not be used for QR code reading).
+- QR codes on a transparent background are now read correctly, regardless of the QR module color (no longer limited to black on transparent).
+
+### Changed
+
+- The file picker for QR code / barcode reading now lists only supported image files. The picker for binary input still shows all files.
+
 ## [v0.2.1] - 2026-06-05
 
 ### Fixed

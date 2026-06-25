@@ -59,6 +59,7 @@ export default {
         mimeRaw: 'RAW (拡張子なし)',
         mimeCustom: 'カスタム…',
         clipboardNoImage: 'クリップボードに画像がありません',
+        imageFilterName: '画像ファイル',
         unsupportedPreview: 'この形式のプレビューには対応していません',
         qrFormat: '出力形式',
         qrErrorCorrection: '誤り訂正レベル',

@@ -4,7 +4,14 @@ import { setupConsoleBridge, setMainWindow } from './utils/console-bridge';
 import { registerIpcHandlers } from './ipc/index';
 import { initializeUpdater, scheduleStartupCheck, isInstalling } from './services/updater';
 import { loadSettings, saveSettings } from './services/settings';
-import type { AppLanguage, AppTheme, Favorite, ResolvedLanguage, ResolvedTheme } from '../shared/types';
+import type {
+    AppLanguage,
+    AppTheme,
+    Favorite,
+    PersistedPanes,
+    ResolvedLanguage,
+    ResolvedTheme,
+} from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -117,6 +124,14 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('recent:save', (_e, recentConversions: Favorite[]) => {
         saveSettings({ recentConversions });
+    });
+
+    ipcMain.handle('panes:get', () => {
+        return loadSettings().lastPanes ?? null;
+    });
+
+    ipcMain.handle('panes:save', (_e, lastPanes: PersistedPanes) => {
+        saveSettings({ lastPanes });
     });
 
     ipcMain.handle('window:minimize', () => {

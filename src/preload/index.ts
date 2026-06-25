@@ -11,6 +11,8 @@ const IPC_CHANNELS = {
     FAVORITES_SAVE: 'favorites:save',
     RECENT_GET: 'recent:get',
     RECENT_SAVE: 'recent:save',
+    PANES_GET: 'panes:get',
+    PANES_SAVE: 'panes:save',
     WINDOW_MINIMIZE: 'window:minimize',
     WINDOW_MAXIMIZE_OR_RESTORE: 'window:maximizeOrRestore',
     WINDOW_CLOSE: 'window:close',
@@ -49,6 +51,12 @@ const api: IpcApi = {
     async saveRecentConversions(recent) {
         return ipcRenderer.invoke(IPC_CHANNELS.RECENT_SAVE, recent);
     },
+    async getPanes() {
+        return ipcRenderer.invoke(IPC_CHANNELS.PANES_GET);
+    },
+    async savePanes(panes) {
+        return ipcRenderer.invoke(IPC_CHANNELS.PANES_SAVE, panes);
+    },
     async minimize() {
         return ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE);
     },
@@ -83,8 +91,8 @@ const api: IpcApi = {
         },
     },
     file: {
-        async open() {
-            return ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN);
+        async open(options) {
+            return ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN, options);
         },
         async save(args) {
             return ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE, args);

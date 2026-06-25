@@ -14,6 +14,19 @@ export type Favorite = {
     outputType: TypeId;
 };
 
+// 起動時に復元する左右ペインの選択状態 (カテゴリ・タイプと矢印の向き)。
+// 入力データ (value) は保存しない。タイプ選択のみを永続化する。
+export type PersistedPaneSide = {
+    category: CategoryId;
+    type: TypeId;
+};
+export type PersistedPanes = {
+    // 矢印の向き ('rtl' = 左が入力 / 'ltr' = 右が入力)。
+    direction: 'rtl' | 'ltr';
+    left: PersistedPaneSide;
+    right: PersistedPaneSide;
+};
+
 // アプリのテーマ設定
 export type AppTheme = 'light' | 'dark' | 'system';
 
@@ -51,6 +64,21 @@ export type UpdateState = {
     progress?: number;
     // 直近のエラーメッセージ (status='error' 時のみ)
     error?: string;
+};
+
+// ファイル選択ダイアログの拡張子フィルタ (Electron の FileFilter と同形)。
+// 例: { name: '画像ファイル', extensions: ['png', 'jpg', 'svg'] }
+// 表示名はローカライズしたいため、renderer 側で文言を解決して渡す。
+export type FileFilter = {
+    name: string;
+    // 拡張子はドットなし (例: 'png')。すべて許可する場合は ['*']。
+    extensions: string[];
+};
+
+// ファイル選択ダイアログのオプション
+export type FileOpenOptions = {
+    // 指定時はこのフィルタで表示を絞り込む。未指定なら全ファイル。
+    filters?: FileFilter[];
 };
 
 // ファイル選択ダイアログの結果

@@ -3,14 +3,35 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import type { AppLanguage, AppTheme, Favorite } from '../../shared/types';
+import type { AppLanguage, AppTheme, Favorite, PersistedPanes } from '../../shared/types';
 
 export type PersistedSettings = {
     theme?: AppTheme;
     language?: AppLanguage;
     favorites?: Favorite[];
     recentConversions?: Favorite[];
+    // 左右ペインの選択状態 (タイプ保存)。
+    lastPanes?: PersistedPanes;
 };
+
+// 永続化された lastPanes を型安全に検証する。壊れていれば undefined を返す。
+function sanitizePanes(value: unknown): PersistedPanes | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const v = value as PersistedPanes;
+    const okSide = (s: unknown): s is PersistedPanes['left'] =>
+        !!s &&
+        typeof s === 'object' &&
+        typeof (s as PersistedPanes['left']).category === 'string' &&
+        typeof (s as PersistedPanes['left']).type === 'string';
+    if ((v.direction !== 'rtl' && v.direction !== 'ltr') || !okSide(v.left) || !okSide(v.right)) {
+        return undefined;
+    }
+    return {
+        direction: v.direction,
+        left: { category: v.left.category, type: v.left.type },
+        right: { category: v.right.category, type: v.right.type },
+    };
+}
 
 // 永続化された favorites を型安全に検証する。壊れた要素は捨てる。
 function sanitizeFavorites(value: unknown): Favorite[] {
@@ -58,6 +79,8 @@ export function loadSettings(): PersistedSettings {
         }
         result.favorites = sanitizeFavorites(parsed.favorites);
         result.recentConversions = sanitizeFavorites(parsed.recentConversions);
+        const panes = sanitizePanes(parsed.lastPanes);
+        if (panes) result.lastPanes = panes;
         return result;
     } catch {
         return {};

@@ -36,6 +36,10 @@ function App() {
         window.encodelab.getRecentConversions().then(recent => {
             useConverterStore.getState().setRecentConversions(recent);
         });
+        // 永続化済みの左右ペインの選択状態 (タイプ) を復元する。
+        window.encodelab.getPanes().then(panes => {
+            if (panes) useConverterStore.getState().restorePanes(panes);
+        });
     }, [i18n]);
 
     // 起動時のフォーカスをキャプションバーから完全に剥がす。

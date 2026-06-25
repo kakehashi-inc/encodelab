@@ -14,6 +14,7 @@ import {
     MultiFormatReader,
     RGBLuminanceSource,
 } from '@zxing/library';
+import { loadImageFromBytes, resolveImageSize } from '../image-utils';
 
 export type BarcodeReadResult = {
     text: string;
@@ -47,6 +48,8 @@ const MIN_RASTER_LONG_EDGE = 800;
 
 export async function readBarcode(mime: string, bytes: Uint8Array): Promise<BarcodeReadResult> {
     const img = await loadImageFromBytes(mime, bytes);
+    // SVG など intrinsic サイズが取れない画像のため、基準サイズはバイト列からも解決する。
+    const base = resolveImageSize(mime, bytes, img);
 
     const hints = new Map<DecodeHintType, unknown>();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, ENABLED_FORMATS);
@@ -55,7 +58,7 @@ export async function readBarcode(mime: string, bytes: Uint8Array): Promise<Barc
     reader.setHints(hints);
 
     for (const angle of ROTATION_ANGLES_DEG) {
-        const imageData = rasterizeRotated(img, angle);
+        const imageData = rasterizeRotated(img, base.width, base.height, angle);
         const result = tryDecode(reader, imageData);
         if (result) {
             return { text: result.text, format: result.format };
@@ -99,9 +102,7 @@ function toLuminances(data: Uint8ClampedArray): Uint8ClampedArray {
 
 // 画像を指定角度だけ回転して Canvas に描画し、ImageData を返す。
 // 同時に、走査に適した解像度へスケール調整する。
-function rasterizeRotated(img: HTMLImageElement, angleDeg: number): ImageData {
-    const baseW = img.naturalWidth || img.width;
-    const baseH = img.naturalHeight || img.height;
+function rasterizeRotated(img: HTMLImageElement, baseW: number, baseH: number, angleDeg: number): ImageData {
     const longEdge = Math.max(baseW, baseH);
 
     let scale = 1;
@@ -132,21 +133,4 @@ function rasterizeRotated(img: HTMLImageElement, angleDeg: number): ImageData {
     ctx.rotate(rad);
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
     return ctx.getImageData(0, 0, canvasW, canvasH);
-}
-
-function loadImageFromBytes(mime: string, bytes: Uint8Array): Promise<HTMLImageElement> {
-    const blob = new Blob([new Uint8Array(bytes)], { type: mime || 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            resolve(img);
-        };
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            reject(new Error('Failed to load image'));
-        };
-        img.src = url;
-    });
 }

@@ -25,6 +25,9 @@ export const IPC_CHANNELS = {
     // 直近の変換履歴
     RECENT_GET: 'recent:get',
     RECENT_SAVE: 'recent:save',
+    // 左右ペインの選択状態 (タイプ保存)
+    PANES_GET: 'panes:get',
+    PANES_SAVE: 'panes:save',
     WINDOW_MINIMIZE: 'window:minimize',
     WINDOW_MAXIMIZE_OR_RESTORE: 'window:maximizeOrRestore',
     WINDOW_CLOSE: 'window:close',

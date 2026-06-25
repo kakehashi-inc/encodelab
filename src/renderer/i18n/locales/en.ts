@@ -59,6 +59,7 @@ export default {
         mimeRaw: 'RAW (no extension)',
         mimeCustom: 'Custom…',
         clipboardNoImage: 'No image in clipboard',
+        imageFilterName: 'Image files',
         unsupportedPreview: 'Preview not available for this format',
         qrFormat: 'Format',
         qrErrorCorrection: 'Error correction',

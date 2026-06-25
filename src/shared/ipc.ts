@@ -3,7 +3,9 @@ import type {
     AppLanguage,
     AppTheme,
     Favorite,
+    PersistedPanes,
     UpdateState,
+    FileOpenOptions,
     FileOpenResult,
     FileSaveResult,
     MimeDetectResult,
@@ -23,6 +25,9 @@ export type IpcApi = {
     // 直近の変換履歴
     getRecentConversions(): Promise<Favorite[]>;
     saveRecentConversions(recent: Favorite[]): Promise<void>;
+    // 左右ペインの選択状態 (タイプ保存)。未保存なら null。
+    getPanes(): Promise<PersistedPanes | null>;
+    savePanes(panes: PersistedPanes): Promise<void>;
     // ウィンドウ制御
     minimize(): Promise<void>;
     maximizeOrRestore(): Promise<boolean>;
@@ -43,8 +48,9 @@ export type IpcApi = {
     };
     // ファイル入出力
     file: {
-        // ファイル選択ダイアログを開き、選択ファイルのバイト列を返す
-        open(): Promise<FileOpenResult>;
+        // ファイル選択ダイアログを開き、選択ファイルのバイト列を返す。
+        // options.filters を渡すと対応形式で表示を絞り込む。
+        open(options?: FileOpenOptions): Promise<FileOpenResult>;
         // ファイル保存ダイアログを開き、指定バイト列を保存する
         save(args: { suggestedName?: string; bytes: Uint8Array }): Promise<FileSaveResult>;
     };

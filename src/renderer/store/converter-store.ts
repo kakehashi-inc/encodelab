@@ -1,7 +1,7 @@
 // 変換ツール本体の状態管理 (Zustand)
 import { create } from 'zustand';
 import { CATEGORIES, defaultTypeOfCategory, findType, type CategoryId, type TypeId } from '@shared/conversion/catalog';
-import type { Favorite } from '@shared/types';
+import type { Favorite, PersistedPanes, PersistedPaneSide } from '@shared/types';
 import { EMPTY_PANE_VALUE, type PaneValue } from '../conversion/pane-value';
 import { DEFAULT_QR_OPTIONS, type QrOptions } from '../conversion/qr/generator';
 import { DEFAULT_BARCODE_OPTIONS, type BarcodeOptions } from '../conversion/barcode/generator';
@@ -69,6 +69,8 @@ type ConverterState = {
     recordRecentConversion(): void;
     // 入出力パターン (Favorite 形) を左右ペインへ適用する (ペインのデータは維持)。
     applyPattern(pattern: Favorite): void;
+    // 起動時に永続化済みのペイン選択状態を復元する (永続化はしない)。
+    restorePanes(panes: PersistedPanes): void;
 };
 
 const INITIAL_LEFT: PaneState = {
@@ -94,6 +96,29 @@ function persistFavorites(favorites: Favorite[]): void {
 // 直近変換履歴をメインプロセスへ永続化する (失敗は致命でないので握りつぶす)。
 function persistRecent(recent: Favorite[]): void {
     void window.encodelab.saveRecentConversions(recent).catch(() => {});
+}
+
+// 左右ペインの選択状態 (タイプ・矢印の向き) を永続化する。入力データ (value) は保存しない。
+function persistPanes(state: ConverterState): void {
+    void window.encodelab
+        .savePanes({
+            direction: state.direction,
+            left: { category: state.left.category, type: state.left.type },
+            right: { category: state.right.category, type: state.right.type },
+        })
+        .catch(() => {});
+}
+
+// 永続化された 1 ペイン分の選択状態を PaneState へ復元する。
+// タイプが現行カタログに存在しない場合は null を返す (壊れた保存値を弾く)。
+function toRestoredPaneState(side: PersistedPaneSide): PaneState | null {
+    try {
+        const def = findType(side.type);
+        // カテゴリは保存値ではなくカタログ定義から導出し、整合性を保証する。
+        return { category: def.category, type: side.type, value: EMPTY_PANE_VALUE };
+    } catch {
+        return null;
+    }
 }
 
 // 入力/出力のペア (Favorite 形) を左右ペインに適用する共通処理。
@@ -132,6 +157,7 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
                 message: undefined,
             };
         });
+        persistPanes(get());
     },
 
     setType(side, type) {
@@ -149,6 +175,7 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
                 message: undefined,
             };
         });
+        persistPanes(get());
     },
 
     setValue(side, value) {
@@ -168,6 +195,7 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
             right: state.left,
             message: undefined,
         }));
+        persistPanes(get());
     },
 
     setQrOptions(options) {
@@ -230,11 +258,23 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
     applyFavorite(id) {
         const state = get();
         const fav = state.favorites.find(f => f.id === id);
-        if (fav) set(applyPatternToPanes(state, fav));
+        if (fav) {
+            set(applyPatternToPanes(state, fav));
+            persistPanes(get());
+        }
     },
 
     applyPattern(pattern) {
         set(state => applyPatternToPanes(state, pattern));
+        persistPanes(get());
+    },
+
+    restorePanes(panes) {
+        const left = toRestoredPaneState(panes.left);
+        const right = toRestoredPaneState(panes.right);
+        // どちらかが壊れていれば復元しない (初期状態のまま)。
+        if (!left || !right) return;
+        set(state => ({ ...state, direction: panes.direction, left, right }));
     },
 
     setRecentConversions(recent) {

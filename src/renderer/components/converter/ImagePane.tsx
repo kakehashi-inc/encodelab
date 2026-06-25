@@ -51,7 +51,10 @@ function ImageInput({ value, onChange }: { value: PaneValue; onChange: (value: P
     const [pasteError, setPasteError] = React.useState<string | undefined>(undefined);
 
     const handleOpen = async () => {
-        const result = await window.encodelab.file.open();
+        // QR / バーコード読取は画像のみ対象。ダイアログを対応形式で絞り込む。
+        const result = await window.encodelab.file.open({
+            filters: [{ name: t('pane.imageFilterName'), extensions: IMAGE_EXTENSIONS }],
+        });
         if (!result.ok) return;
         const detected = await window.encodelab.mime.detect(result.bytes);
         const mime = detected.mime ?? guessImageMime(result.name) ?? RAW_MIME;
@@ -171,6 +174,10 @@ function ImageOutput({
         </Stack>
     );
 }
+
+// ファイル選択ダイアログのフィルタ用拡張子 (QR / バーコード読取が対応する画像形式)。
+// guessImageMime が判定する形式と揃える。
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 
 function guessImageMime(name: string): string | null {
     const lower = name.toLowerCase();

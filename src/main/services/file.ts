@@ -1,11 +1,17 @@
 import path from 'path';
 import { promises as fs } from 'fs';
 import { dialog, BrowserWindow } from 'electron';
-import type { FileOpenResult, FileSaveResult } from '../../shared/types';
+import type { FileOpenOptions, FileOpenResult, FileSaveResult } from '../../shared/types';
 
-export async function openFile(parent?: BrowserWindow | null): Promise<FileOpenResult> {
+export async function openFile(
+    parent?: BrowserWindow | null,
+    openOptions?: FileOpenOptions
+): Promise<FileOpenResult> {
     try {
-        const options = { properties: ['openFile' as const] };
+        const options: Electron.OpenDialogOptions = { properties: ['openFile'] };
+        if (openOptions?.filters && openOptions.filters.length > 0) {
+            options.filters = openOptions.filters;
+        }
         const result = parent ? await dialog.showOpenDialog(parent, options) : await dialog.showOpenDialog(options);
         if (result.canceled || result.filePaths.length === 0) {
             return { ok: false, canceled: true };

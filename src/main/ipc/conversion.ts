@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/constants';
-import type { HashAlgorithm, HashEncoding } from '../../shared/types';
+import type { FileOpenOptions, HashAlgorithm, HashEncoding } from '../../shared/types';
 import { openFile, saveFile } from '../services/file';
 import { detectMime } from '../services/mime';
 import { computeHash } from '../services/hash';
@@ -10,8 +10,8 @@ function focusedWindow(): BrowserWindow | null {
 }
 
 export function registerConversionIpcHandlers() {
-    ipcMain.handle(IPC_CHANNELS.FILE_OPEN, async () => {
-        return openFile(focusedWindow());
+    ipcMain.handle(IPC_CHANNELS.FILE_OPEN, async (_e, options?: FileOpenOptions) => {
+        return openFile(focusedWindow(), options);
     });
 
     ipcMain.handle(IPC_CHANNELS.FILE_SAVE, async (_e, args: { suggestedName?: string; bytes: Uint8Array }) => {
