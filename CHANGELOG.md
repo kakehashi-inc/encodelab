@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [v0.2.3] - 2026-06-26
+
 ### Added
 
 - QR code and barcode reading now show progress while scanning and can be cancelled at any time. Other conversions are unchanged.

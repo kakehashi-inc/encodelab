@@ -1,6 +1,6 @@
 {
   "name": "encodelab",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A developer's swiss-army knife for encoding, decoding, and format conversion.",
   "main": "dist/main/index.js",
   "engines": {
