@@ -37,6 +37,7 @@ export default {
         clear: 'Clear',
         convert: 'Convert',
         converting: 'Converting...',
+        cancel: 'Cancel',
         swapPanes: 'Swap panes',
         searchType: 'Search type',
         searchPlaceholder: 'Search type name…',
@@ -118,8 +119,14 @@ export default {
         hashOutputOnly: 'Hash types are output-only.',
         notConvertible: 'This combination is not convertible.',
     },
+    // Image recognition (QR code / barcode reading) progress overlay
+    recognize: {
+        stage: 'Stage {{stage}}/{{stageCount}}',
+        step: 'Step {{done}}/{{total}}',
+    },
     message: {
         conversionSucceeded: 'Conversion completed.',
+        recognitionCancelled: 'Reading cancelled.',
     },
     error: {
         emptyInput: 'Input is empty.',

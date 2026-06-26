@@ -37,6 +37,7 @@ export default {
         clear: 'クリア',
         convert: '変換',
         converting: '変換中...',
+        cancel: 'キャンセル',
         swapPanes: '左右のペインを入れ替え',
         searchType: 'タイプ検索',
         searchPlaceholder: 'タイプ名で検索…',
@@ -118,8 +119,14 @@ export default {
         hashOutputOnly: 'ハッシュは出力専用です。',
         notConvertible: 'この組合せは変換できません。',
     },
+    // 画像認識 (QR / バーコード読取) の進捗オーバーレイ
+    recognize: {
+        stage: '段階 {{stage}}/{{stageCount}}',
+        step: 'ステップ {{done}}/{{total}}',
+    },
     message: {
         conversionSucceeded: '変換が完了しました。',
+        recognitionCancelled: '読み取りをキャンセルしました。',
     },
     error: {
         emptyInput: '入力が空です。',

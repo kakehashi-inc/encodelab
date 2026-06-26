@@ -26,6 +26,7 @@ import {
     RGBLuminanceSource,
 } from '@zxing/library';
 import { loadImageFromBytes, resolveImageSize } from '../image-utils';
+import { RecognitionTracker, type RecognizeOptions } from '../recognition';
 
 export type BarcodeReadResult = {
     text: string;
@@ -78,54 +79,91 @@ const TILE_GRID = 3;
 const TILE_OVERLAP = 0.5;
 const TILE_ZOOM_LONG_EDGE = 1400;
 
-export async function readBarcode(mime: string, bytes: Uint8Array): Promise<BarcodeReadResult> {
-    const img = await loadImageFromBytes(mime, bytes);
-    // SVG など intrinsic サイズが取れない画像のため、基準サイズはバイト列からも解決する。
-    const base = resolveImageSize(mime, bytes, img);
+export async function readBarcode(
+    mime: string,
+    bytes: Uint8Array,
+    options: RecognizeOptions = {}
+): Promise<BarcodeReadResult> {
+    // ZXing は 1 回の読み取り失敗 (NotFoundException 等) を console.warn に出力する。本実装は
+    // 多数の角度・タイルを試すため、このログが大量に出てコンソールを埋め尽くす。読み取り失敗は
+    // 想定内 (次の試行に進むだけ) なので、認識中だけ該当ログを抑制する。
+    const restoreLogs = suppressZxingDecodeLogs();
+    try {
+        const img = await loadImageFromBytes(mime, bytes);
+        // SVG など intrinsic サイズが取れない画像のため、基準サイズはバイト列からも解決する。
+        const base = resolveImageSize(mime, bytes, img);
 
-    // 元画像を一度だけ基準グレースケール (巨大写真は縮小) に変換する。
-    const baseGray = drawBaseGrayscale(img, base.width, base.height);
+        // 元画像を一度だけ基準グレースケール (巨大写真は縮小) に変換する。
+        const baseGray = drawBaseGrayscale(img, base.width, base.height);
 
-    const hints = new Map<DecodeHintType, unknown>();
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, ENABLED_FORMATS);
-    hints.set(DecodeHintType.TRY_HARDER, true);
-    const reader = new MultiFormatReader();
-    reader.setHints(hints);
+        const hints = new Map<DecodeHintType, unknown>();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, ENABLED_FORMATS);
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        const reader = new MultiFormatReader();
+        reader.setHints(hints);
 
-    // 正規化強度ごとの基準 Canvas を作る (全体走査・タイル走査で使い回す)。
-    const sources = NORMALIZE_STAGES.map(clip => normalizedCanvas(baseGray, clip));
+        // 正規化強度ごとの基準 Canvas を作る (全体走査・タイル走査で使い回す)。
+        const sources = NORMALIZE_STAGES.map(clip => normalizedCanvas(baseGray, clip));
+        const rects = tileRects(baseGray.width, baseGray.height, TILE_GRID, TILE_OVERLAP);
 
-    // 段階 1: 画像全体走査 (正規化強め -> 弱め -> 無加工)。
-    for (const source of sources) {
-        const scale = fullScanScale(source.width, source.height);
-        const result = sweepAngles(reader, source, scale);
-        if (result) return result;
-    }
+        // 進捗・キャンセル管理。総ステップ = 段階 1 (全体走査) + 段階 2 (タイル走査) の最悪ケース。
+        const angles = ROTATION_ANGLES_DEG.length;
+        const stage1Steps = sources.length * angles;
+        const stage2Steps = sources.length * rects.length * angles;
+        const tracker = new RecognitionTracker(stage1Steps + stage2Steps, 2, options);
 
-    // 段階 2: タイル分割走査 (正規化強め -> 弱め -> 無加工)。
-    const rects = tileRects(baseGray.width, baseGray.height, TILE_GRID, TILE_OVERLAP);
-    for (const source of sources) {
-        for (const rect of rects) {
-            const tile = cropCanvas(source, rect);
-            const longEdge = Math.max(tile.width, tile.height);
-            const scale = longEdge < TILE_ZOOM_LONG_EDGE ? TILE_ZOOM_LONG_EDGE / longEdge : 1;
-            const result = sweepAngles(reader, tile, scale);
+        // 段階 1: 画像全体走査 (正規化強め -> 弱め -> 無加工)。
+        for (const source of sources) {
+            const scale = fullScanScale(source.width, source.height);
+            const result = await sweepAngles(reader, source, scale, tracker, 1);
             if (result) return result;
         }
-    }
 
-    throw new Error('Barcode not detected');
+        // 段階 2: タイル分割走査 (正規化強め -> 弱め -> 無加工)。
+        for (const source of sources) {
+            for (const rect of rects) {
+                const tile = cropCanvas(source, rect);
+                const longEdge = Math.max(tile.width, tile.height);
+                const scale = longEdge < TILE_ZOOM_LONG_EDGE ? TILE_ZOOM_LONG_EDGE / longEdge : 1;
+                const result = await sweepAngles(reader, tile, scale, tracker, 2);
+                if (result) return result;
+            }
+        }
+
+        throw new Error('Barcode not detected');
+    } finally {
+        restoreLogs();
+    }
+}
+
+// 認識中のみ、ZXing がデコード失敗時に出す console.warn を抑制する。
+// 戻り値の関数を呼ぶと元の console.warn に復帰する。該当プレフィックス以外のログは素通しする。
+function suppressZxingDecodeLogs(): () => void {
+    const original = console.warn;
+    console.warn = (...args: unknown[]): void => {
+        if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader:')) {
+            return;
+        }
+        (original as (...rest: unknown[]) => void)(...args);
+    };
+    return () => {
+        console.warn = original;
+    };
 }
 
 // 1 つの Canvas を全角度で走査し、最初に読めた結果を返す。
-function sweepAngles(
+// 各試行ごとに tracker.tick で進捗通知・キャンセル確認・イベントループ明け渡しを行う。
+async function sweepAngles(
     reader: MultiFormatReader,
     source: HTMLCanvasElement,
-    scale: number
-): BarcodeReadResult | null {
+    scale: number,
+    tracker: RecognitionTracker,
+    stage: number
+): Promise<BarcodeReadResult | null> {
     for (const angle of ROTATION_ANGLES_DEG) {
         const imageData = rasterizeRotated(source, scale, angle);
         const result = tryDecode(reader, imageData);
+        await tracker.tick(stage);
         if (result) return result;
     }
     return null;

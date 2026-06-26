@@ -17,8 +17,10 @@ import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useConverterStore, inputSide, outputSide, favoriteId } from '../../store/converter-store';
 import { checkCompatibility } from '@shared/conversion/compatibility';
+import { findType } from '@shared/conversion/catalog';
 import { runConversion } from '../../conversion/engine';
 import type { ConvertContext } from '../../conversion/handlers';
+import type { RecognizeOptions, RecognizeProgress } from '../../conversion/recognition';
 import Pane from './Pane';
 import CenterControls from './CenterControls';
 import BottomBar from './BottomBar';
@@ -59,6 +61,10 @@ export default function ConverterApp() {
     );
 
     const [busy, setBusy] = React.useState(false);
+    // 画像認識 (QR / バーコード) 実行中の進捗。通常変換中は null。
+    const [recognizeProgress, setRecognizeProgress] = React.useState<RecognizeProgress | null>(null);
+    // 実行中の認識をキャンセルするための AbortController。
+    const abortRef = React.useRef<AbortController | null>(null);
 
     const ctx: ConvertContext = React.useMemo(
         () => ({
@@ -100,22 +106,53 @@ export default function ConverterApp() {
     const handleConvert = async () => {
         clearMessage();
         setBusy(true);
-        // runConversion は Base58 など同期 CPU 処理を含み UI スレッドをブロックする。
+
+        // 入力が画像 (QR / バーコード) のときは認識処理。進捗・キャンセルを有効にする。
+        // 出力がハッシュの場合は入力バイト列を直接ハッシュするだけで認識は走らないため除く。
+        const inputDef = findType(inputPane.type);
+        const outputDef = findType(outputPane.type);
+        const isRecognition = inputDef.display === 'image' && outputDef.category !== 'hash';
+
+        let recognize: RecognizeOptions = {};
+        if (isRecognition) {
+            const controller = new AbortController();
+            abortRef.current = controller;
+            // 準備中の初期表示 (総ステップ確定までは割合を出さない)。
+            setRecognizeProgress({ done: 0, total: 0, stage: 1, stageCount: 1 });
+            recognize = { signal: controller.signal, onProgress: setRecognizeProgress };
+        }
+
+        // runConversion は同期 CPU 処理を含み UI スレッドをブロックする。
         // オーバーレイ (busy=true) が画面に描画されてから重い処理に入るよう、
         // 描画コミットを待つ (rAF を 2 回 ≒ 次フレーム以降に実行)。
         await waitForPaint();
         try {
-            const result = await runConversion(inputPane.type, inputPane.value, outputPane.type, ctx);
+            const result = await runConversion(
+                inputPane.type,
+                inputPane.value,
+                outputPane.type,
+                ctx,
+                recognize
+            );
             if (result.ok) {
                 setValue(outSide, result.value);
                 recordRecentConversion();
                 setMessage({ severity: 'success', text: t('message.conversionSucceeded') });
+            } else if ('aborted' in result) {
+                // ユーザーによるキャンセル。エラーではなく中断として知らせる。
+                setMessage({ severity: 'info', text: t('message.recognitionCancelled') });
             } else {
                 setMessage({ severity: 'error', text: resolveErrorText(result) });
             }
         } finally {
+            abortRef.current = null;
+            setRecognizeProgress(null);
             setBusy(false);
         }
+    };
+
+    const handleCancelRecognition = () => {
+        abortRef.current?.abort();
     };
 
     return (
@@ -172,7 +209,11 @@ export default function ConverterApp() {
             {message && (
                 <BottomBar severity={message.severity} message={message.text} onClose={clearMessage} />
             )}
-            <ConvertingOverlay open={busy} />
+            <ConvertingOverlay
+                open={busy}
+                progress={recognizeProgress}
+                onCancel={recognizeProgress ? handleCancelRecognition : undefined}
+            />
         </Box>
     );
 }

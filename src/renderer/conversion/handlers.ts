@@ -28,6 +28,7 @@ import { generateQrCode, type QrOptions, DEFAULT_QR_OPTIONS } from './qr/generat
 import { readQrCode } from './qr/reader';
 import { generateBarcode, type BarcodeOptions, DEFAULT_BARCODE_OPTIONS } from './barcode/generator';
 import { readBarcode } from './barcode/reader';
+import type { RecognizeOptions } from './recognition';
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder('utf-8', { fatal: false });
@@ -45,7 +46,11 @@ export type ConvertContext = {
 };
 
 // 入力ペイン値 → CanonicalValue
-export async function parsePane(typeId: TypeId, value: PaneValue): Promise<CanonicalValue> {
+export async function parsePane(
+    typeId: TypeId,
+    value: PaneValue,
+    recognize: RecognizeOptions = {}
+): Promise<CanonicalValue> {
     const def = findType(typeId);
     if (def.outputOnly) {
         throw new Error(`Type ${typeId} is output-only`);
@@ -60,14 +65,15 @@ export async function parsePane(typeId: TypeId, value: PaneValue): Promise<Canon
         }
         case 'image': {
             // image 表示の入力タイプは QR コード / バーコード。画像からテキストを読み取る。
+            // 認識は時間がかかり得るため、進捗・キャンセル制御 (recognize) を渡す。
             if (value.kind !== 'image') {
                 throw new Error('Image input expects an image');
             }
             if (def.id === 'barcode') {
-                const result = await readBarcode(value.mime, value.bytes);
+                const result = await readBarcode(value.mime, value.bytes, recognize);
                 return { kind: 'text', text: result.text };
             }
-            const result = await readQrCode(value.mime, value.bytes);
+            const result = await readQrCode(value.mime, value.bytes, recognize);
             return { kind: 'text', text: result.text };
         }
         case 'text': {

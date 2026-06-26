@@ -8,12 +8,15 @@ import { findType, type TypeId } from '@shared/conversion/catalog';
 import { adapt } from './adapt';
 import { parsePane, serializePane, type ConvertContext, computeHashOf } from './handlers';
 import { BarcodeInputError } from './barcode/generator';
+import { isAbortError, type RecognizeOptions } from './recognition';
 import type { PaneValue } from './pane-value';
 
 // 失敗時は素のメッセージ (error) に加え、表示側で i18n 解決するための
 // キー (errorKey) とパラメータ (errorParams) を任意で持つ。
+// aborted はユーザーによるキャンセル (エラーではなく中断) を表す。
 export type ConvertResult =
     | { ok: true; value: PaneValue }
+    | { ok: false; aborted: true }
     | { ok: false; error: string; errorKey?: string; errorParams?: Record<string, string> };
 
 const textEncoder = new TextEncoder();
@@ -22,7 +25,8 @@ export async function runConversion(
     inputType: TypeId,
     inputValue: PaneValue,
     outputType: TypeId,
-    ctx: ConvertContext
+    ctx: ConvertContext,
+    recognize: RecognizeOptions = {}
 ): Promise<ConvertResult> {
     try {
         const outputDef = findType(outputType);
@@ -34,11 +38,15 @@ export async function runConversion(
             return { ok: true, value: { kind: 'text', text } };
         }
 
-        const canonical = await parsePane(inputType, inputValue);
+        const canonical = await parsePane(inputType, inputValue, recognize);
         const adapted = adapt(canonical, outputDef.domain);
         const value = await serializePane(outputType, adapted, ctx);
         return { ok: true, value };
     } catch (err) {
+        // ユーザーによるキャンセルはエラー扱いしない。
+        if (isAbortError(err)) {
+            return { ok: false, aborted: true };
+        }
         if (err instanceof BarcodeInputError) {
             // 規格 ID に対応する i18n キーを渡す。未定義規格は generic にフォールバック。
             return {

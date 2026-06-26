@@ -18,6 +18,7 @@
 //   さらに jsqr の inversionAttempts: 'attemptBoth' で明暗どちらの並びにも対応する。
 import jsQR from 'jsqr';
 import { loadImageFromBytes, resolveImageSize } from '../image-utils';
+import { RecognitionTracker, type RecognizeOptions } from '../recognition';
 
 export type QrReadResult = {
     text: string;
@@ -28,7 +29,11 @@ const FALLBACK_MIN_SHORT_EDGE = 480;
 // 透過とみなすアルファ閾値 (これ未満を背景、以上をモジュールとして扱う)。
 const ALPHA_THRESHOLD = 128;
 
-export async function readQrCode(mime: string, bytes: Uint8Array): Promise<QrReadResult> {
+export async function readQrCode(
+    mime: string,
+    bytes: Uint8Array,
+    options: RecognizeOptions = {}
+): Promise<QrReadResult> {
     const img = await loadImageFromBytes(mime, bytes);
     const { width: baseW, height: baseH } = resolveImageSize(mime, bytes, img);
 
@@ -40,13 +45,18 @@ export async function readQrCode(mime: string, bytes: Uint8Array): Promise<QrRea
         sizes.push({ width: baseW * factor, height: baseH * factor });
     }
 
-    for (const size of sizes) {
-        const raster = rasterize(img, size.width, size.height);
+    // 進捗・キャンセル管理。総ステップ = サイズ数 × 前処理候補の最大数 (2: 通常版 + 透過二値化版)。
+    // 段階はサイズ試行 (原寸 / 拡大) に対応させる。QR は高速なため大半は即時に確定する。
+    const tracker = new RecognitionTracker(sizes.length * 2, sizes.length, options);
+
+    for (let s = 0; s < sizes.length; s += 1) {
+        const raster = rasterize(img, sizes[s].width, sizes[s].height);
         // 各サイズについて、複数の前処理候補を順に試す。
         for (const candidate of buildCandidates(raster)) {
             const result = jsQR(candidate.data, candidate.width, candidate.height, {
                 inversionAttempts: 'attemptBoth',
             });
+            await tracker.tick(s + 1);
             if (result) {
                 return { text: result.data };
             }
